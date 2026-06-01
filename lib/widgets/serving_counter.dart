@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_colors.dart';
+
 class ServingCounter extends StatelessWidget {
   const ServingCounter({
     super.key,
@@ -15,30 +17,23 @@ class ServingCounter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
           _CounterButton(icon: Icons.remove_rounded, onTap: onDecrement),
           Expanded(
-            child: Column(
-              children: [
-                Text(
-                  '$value',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                Text(
-                  'porsi',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: const Color(0xFF757575),
-                  ),
-                ),
-              ],
+            child: Center(
+              child: Text(
+                '$value',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+              ),
             ),
           ),
           _CounterButton(icon: Icons.add_rounded, onTap: onIncrement),
@@ -56,17 +51,26 @@ class _CounterButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isPrimary = icon == Icons.add_rounded;
+
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(14),
       child: Ink(
-        width: 48,
-        height: 48,
+        width: 36,
+        height: 36,
         decoration: BoxDecoration(
-          color: const Color(0xFFE8F5E9),
-          borderRadius: BorderRadius.circular(16),
+          color: isPrimary ? AppColors.primary : AppColors.background,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isPrimary ? AppColors.primary : AppColors.border,
+          ),
         ),
-        child: Icon(icon, color: const Color(0xFF2E7D32)),
+        child: Icon(
+          icon,
+          color: isPrimary ? Colors.white : AppColors.text,
+          size: 18,
+        ),
       ),
     );
   }

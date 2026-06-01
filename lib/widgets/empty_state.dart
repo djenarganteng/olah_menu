@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_colors.dart';
+
 class EmptyState extends StatelessWidget {
   const EmptyState({
     super.key,
@@ -19,39 +21,44 @@ class EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: AppColors.border),
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 76,
-              height: 76,
+              width: 64,
+              height: 64,
               decoration: BoxDecoration(
-                color: const Color(0xFFE8F5E9),
-                borderRadius: BorderRadius.circular(24),
+                color: AppColors.primarySoft,
+                borderRadius: BorderRadius.circular(20),
               ),
-              child: Icon(icon, size: 38, color: const Color(0xFF2E7D32)),
+              child: Icon(icon, size: 30, color: AppColors.primary),
             ),
             const SizedBox(height: 18),
             Text(
               title,
               style: Theme.of(
                 context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 10),
             Text(
               message,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: const Color(0xFF757575),
-                height: 1.5,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.textSoft),
               textAlign: TextAlign.center,
             ),
             if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: 16),
+              const SizedBox(height: 18),
               FilledButton(onPressed: onAction, child: Text(actionLabel!)),
             ],
           ],

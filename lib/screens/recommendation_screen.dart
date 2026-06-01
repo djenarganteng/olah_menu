@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 
 import '../models/ingredient.dart';
 import '../providers/recommendation_provider.dart';
+import '../theme/app_colors.dart';
+import '../widgets/app_bottom_nav_bar.dart';
+import '../widgets/app_header.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/recipe_card.dart';
 import '../widgets/section_title.dart';
@@ -35,7 +38,8 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Rekomendasi Resep')),
+      appBar: const AppHeader(),
+      bottomNavigationBar: const AppBottomNavBar(currentIndex: 1),
       body: SafeArea(
         child: Consumer<RecommendationProvider>(
           builder: (context, provider, _) {
@@ -44,10 +48,11 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SectionTitle(
-                    title: 'Resep Paling Cocok',
+                  const SectionTitle(
+                    title: 'Recommendations',
                     subtitle:
-                        'Dihitung dari ${widget.selectedIngredients.length} bahan yang kamu pilih.',
+                        'Based on your pantry items, here\'s what you can cook today.',
+                    compact: true,
                   ),
                   const SizedBox(height: 18),
                   Expanded(child: _buildContent(context, provider)),
@@ -85,9 +90,62 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     }
 
     return ListView.separated(
-      itemCount: provider.recommendations.length,
+      itemCount: provider.recommendations.length + 1,
       separatorBuilder: (_, _) => const SizedBox(height: 16),
       itemBuilder: (context, index) {
+        if (index == provider.recommendations.length) {
+          return Container(
+            padding: const EdgeInsets.all(22),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: const Color(0xFFC9E6C9)),
+            ),
+            child: Column(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: AppColors.primarySoft,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(
+                    Icons.spa_outlined,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  'Need more ideas?',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Update your pantry or check out popular community recipes.',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: AppColors.textSoft),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 14),
+                FilledButton.tonal(
+                  onPressed: () => Navigator.of(context).maybePop(),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(0, 40),
+                    backgroundColor: AppColors.primarySoft,
+                    foregroundColor: AppColors.primaryDark,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                  ),
+                  child: const Text('Explore Recipes'),
+                ),
+              ],
+            ),
+          );
+        }
+
         final recommendation = provider.recommendations[index];
         return RecipeCard(
           recommendation: recommendation,

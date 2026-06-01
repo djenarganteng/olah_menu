@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/recipe_recommendation.dart';
+import '../theme/app_colors.dart';
 
 class RecipeCard extends StatelessWidget {
   const RecipeCard({
@@ -20,108 +21,115 @@ class RecipeCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(24),
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          recipe.name,
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(fontWeight: FontWeight.w900),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          recipe.description.isEmpty
-                              ? 'Menu sederhana untuk memanfaatkan bahan yang tersedia.'
-                              : recipe.description,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: const Color(0xFF757575),
-                                height: 1.45,
-                              ),
-                        ),
-                      ],
-                    ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
                   ),
-                  const SizedBox(width: 12),
-                  Container(
+                  child: AspectRatio(
+                    aspectRatio: 16 / 9,
+                    child: recipe.imageUrl == null || recipe.imageUrl!.isEmpty
+                        ? Container(
+                            color: AppColors.primarySoft,
+                            alignment: Alignment.center,
+                            child: const Icon(
+                              Icons.restaurant_menu_rounded,
+                              size: 44,
+                              color: AppColors.primary,
+                            ),
+                          )
+                        : Image.network(
+                            recipe.imageUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => Container(
+                              color: AppColors.primarySoft,
+                              alignment: Alignment.center,
+                              child: const Icon(
+                                Icons.restaurant_menu_rounded,
+                                size: 44,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                  ),
+                ),
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
+                      horizontal: 10,
+                      vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE8F5E9),
-                      borderRadius: BorderRadius.circular(18),
+                      color: AppColors.accent,
+                      borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
-                      '${recommendation.matchPercentage.toStringAsFixed(0)}%',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: const Color(0xFF2E7D32),
-                        fontWeight: FontWeight.w900,
+                      '${recommendation.matchPercentage.toStringAsFixed(0)}% Cocok',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  _MetaChip(
-                    icon: Icons.timer_outlined,
-                    label: '${recipe.cookingTime} menit',
-                  ),
-                  _MetaChip(
-                    icon: Icons.people_alt_outlined,
-                    label: '${recipe.defaultServing} porsi',
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Bahan yang kurang',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                recommendation.missingIngredients.isEmpty
-                    ? 'Semua bahan utama sudah tersedia.'
-                    : recommendation.missingIngredients.join(', '),
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: const Color(0xFF757575),
                 ),
-              ),
-              const SizedBox(height: 14),
-              Row(
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Lihat detail resep',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: const Color(0xFF2E7D32),
+                    recipe.name,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                  const SizedBox(width: 6),
-                  const Icon(
-                    Icons.arrow_forward_rounded,
-                    size: 18,
-                    color: Color(0xFF2E7D32),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _MetaChip(
+                        icon: Icons.access_time_rounded,
+                        label: '${recipe.cookingTime} Min',
+                      ),
+                      _MetaChip(
+                        icon: Icons.people_outline_rounded,
+                        label: '${recipe.defaultServing} Porsi',
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.error_outline_rounded,
+                        size: 16,
+                        color: AppColors.danger,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          recommendation.missingIngredients.isEmpty
+                              ? 'Semua bahan utama sudah tersedia'
+                              : 'Bahan kurang: ${recommendation.missingIngredients.join(', ')}',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: AppColors.danger),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -139,19 +147,20 @@ class _MetaChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFFAFAF5),
-        borderRadius: BorderRadius.circular(16),
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 17, color: const Color(0xFFFF9800)),
+          Icon(icon, size: 16, color: AppColors.primary),
           const SizedBox(width: 8),
           Text(
             label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: AppColors.text,
+            ),
           ),
         ],
       ),

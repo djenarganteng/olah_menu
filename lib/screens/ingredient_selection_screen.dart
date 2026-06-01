@@ -4,9 +4,10 @@ import 'package:provider/provider.dart';
 
 import '../providers/ingredient_provider.dart';
 import '../providers/recommendation_provider.dart';
+import '../theme/app_colors.dart';
+import '../widgets/app_header.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/ingredient_chip.dart';
-import '../widgets/section_title.dart';
 import 'recommendation_screen.dart';
 
 class IngredientSelectionScreen extends StatelessWidget {
@@ -15,117 +16,52 @@ class IngredientSelectionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Pilih Bahan')),
+      appBar: const AppHeader(),
       body: SafeArea(
         child: Consumer<IngredientProvider>(
           builder: (context, provider, _) {
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SectionTitle(
-                    title: 'Isi Kulkasmu Hari Ini',
-                    subtitle:
-                        'Cari dan pilih bahan yang tersedia untuk mendapatkan rekomendasi resep.',
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    onChanged: provider.setSearchQuery,
-                    decoration: const InputDecoration(
-                      hintText: 'Cari bahan, misalnya telur atau sawi',
-                      prefixIcon: Icon(Icons.search_rounded),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    height: 42,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: provider.categories.length,
-                      separatorBuilder: (_, _) => const SizedBox(width: 10),
-                      itemBuilder: (context, index) {
-                        final category = provider.categories[index];
-                        return ChoiceChip(
-                          label: Text(category),
-                          selected: provider.selectedCategory == category,
-                          onSelected: (_) => provider.setCategory(category),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
+            return Column(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(
-                          Icons.check_circle_rounded,
-                          color: Color(0xFF2E7D32),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            '${provider.selectedCount} bahan dipilih',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w800),
+                        TextField(
+                          onChanged: provider.setSearchQuery,
+                          decoration: const InputDecoration(
+                            hintText: 'Cari bahan...',
+                            prefixIcon: Icon(Icons.search_rounded),
                           ),
                         ),
-                        if (provider.selectedCount > 0)
-                          TextButton(
-                            onPressed: provider.clearSelectedIngredients,
-                            child: const Text('Reset'),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          height: 38,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: provider.categories.length,
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(width: 10),
+                            itemBuilder: (context, index) {
+                              final category = provider.categories[index];
+                              return ChoiceChip(
+                                label: Text(category),
+                                selected: provider.selectedCategory == category,
+                                onSelected: (_) =>
+                                    provider.setCategory(category),
+                              );
+                            },
                           ),
+                        ),
+                        const SizedBox(height: 18),
+                        Expanded(child: _buildContent(context, provider)),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  Expanded(child: _buildContent(context, provider)),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: provider.selectedCount == 0
-                          ? () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Pilih minimal satu bahan terlebih dahulu.',
-                                  ),
-                                ),
-                              );
-                            }
-                          : () async {
-                              final selectedIngredients =
-                                  provider.selectedIngredients;
-                              await context
-                                  .read<RecommendationProvider>()
-                                  .fetchRecommendations(selectedIngredients);
-
-                              if (!context.mounted) {
-                                return;
-                              }
-
-                              Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (_) => RecommendationScreen(
-                                    selectedIngredients: selectedIngredients,
-                                  ),
-                                ),
-                              );
-                            },
-                      child: const Text('Tampilkan Rekomendasi'),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+                _BottomSelectionBar(provider: provider),
+              ],
             );
           },
         ),
@@ -165,7 +101,7 @@ class IngredientSelectionScreen extends StatelessWidget {
     }
 
     return AlignedGridView.count(
-      crossAxisCount: 2,
+      crossAxisCount: 3,
       mainAxisSpacing: 12,
       crossAxisSpacing: 12,
       itemCount: provider.filteredIngredients.length,
@@ -177,6 +113,91 @@ class IngredientSelectionScreen extends StatelessWidget {
           onTap: () => provider.toggleSelection(ingredient),
         );
       },
+    );
+  }
+}
+
+class _BottomSelectionBar extends StatelessWidget {
+  const _BottomSelectionBar({required this.provider});
+
+  final IngredientProvider provider;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x14000000),
+            blurRadius: 24,
+            offset: Offset(0, -8),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Text(
+                  '${provider.selectedCount} bahan terpilih',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: AppColors.primaryDark,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const Spacer(),
+                if (provider.selectedCount > 0)
+                  TextButton(
+                    onPressed: provider.clearSelectedIngredients,
+                    child: const Text('Reset'),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: provider.selectedCount == 0
+                    ? () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Pilih minimal satu bahan terlebih dahulu.',
+                            ),
+                          ),
+                        );
+                      }
+                    : () async {
+                        final selectedIngredients =
+                            provider.selectedIngredients;
+                        await context
+                            .read<RecommendationProvider>()
+                            .fetchRecommendations(selectedIngredients);
+
+                        if (!context.mounted) {
+                          return;
+                        }
+
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => RecommendationScreen(
+                              selectedIngredients: selectedIngredients,
+                            ),
+                          ),
+                        );
+                      },
+                child: const Text('Tampilkan Rekomendasi'),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
