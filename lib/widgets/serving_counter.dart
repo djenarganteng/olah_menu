@@ -25,7 +25,13 @@ class ServingCounter extends StatelessWidget {
       ),
       child: Row(
         children: [
-          _CounterButton(icon: Icons.remove_rounded, onTap: onDecrement),
+          _CounterButton(
+            onTap: onDecrement,
+            backgroundColor: AppColors.primary,
+            borderColor: AppColors.primary,
+            iconColor: Colors.white,
+            label: '−',
+          ),
           Expanded(
             child: Center(
               child: Text(
@@ -36,7 +42,13 @@ class ServingCounter extends StatelessWidget {
               ),
             ),
           ),
-          _CounterButton(icon: Icons.add_rounded, onTap: onIncrement),
+          _CounterButton(
+            onTap: onIncrement,
+            backgroundColor: AppColors.primary,
+            borderColor: AppColors.primary,
+            iconColor: Colors.white,
+            label: '+',
+          ),
         ],
       ),
     );
@@ -44,32 +56,46 @@ class ServingCounter extends StatelessWidget {
 }
 
 class _CounterButton extends StatelessWidget {
-  const _CounterButton({required this.icon, required this.onTap});
+  const _CounterButton({
+    required this.onTap,
+    required this.backgroundColor,
+    required this.borderColor,
+    required this.iconColor,
+    required this.label,
+  });
 
-  final IconData icon;
   final VoidCallback onTap;
+  final Color backgroundColor;
+  final Color borderColor;
+  final Color iconColor;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
-    final isPrimary = icon == Icons.add_rounded;
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Ink(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: isPrimary ? AppColors.primary : AppColors.background,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: isPrimary ? AppColors.primary : AppColors.border,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Ink(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: borderColor),
           ),
-        ),
-        child: Icon(
-          icon,
-          color: isPrimary ? Colors.white : AppColors.text,
-          size: 18,
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: iconColor,
+                fontSize: 22,
+                height: 1,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
         ),
       ),
     );

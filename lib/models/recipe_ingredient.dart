@@ -5,6 +5,7 @@ class RecipeIngredient {
     required this.ingredientId,
     required this.amount,
     required this.unit,
+    required this.isRequired,
     this.ingredientName,
     this.ingredientCategory,
     this.createdAt,
@@ -15,6 +16,7 @@ class RecipeIngredient {
   final int ingredientId;
   final double amount;
   final String unit;
+  final bool isRequired;
   final String? ingredientName;
   final String? ingredientCategory;
   final DateTime? createdAt;
@@ -28,11 +30,25 @@ class RecipeIngredient {
       ingredientId: (map['ingredient_id'] as num).toInt(),
       amount: (map['amount'] as num).toDouble(),
       unit: map['unit'] as String,
+      isRequired: map['is_required'] as bool? ?? true,
       ingredientName: ingredientMap?['name'] as String?,
       ingredientCategory: ingredientMap?['category'] as String?,
       createdAt: map['created_at'] == null
           ? null
           : DateTime.tryParse(map['created_at'] as String),
     );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'recipe_id': recipeId,
+      'ingredient_id': ingredientId,
+      'amount': amount,
+      'unit': unit,
+      'is_required': isRequired,
+      'created_at': createdAt?.toIso8601String(),
+      'ingredients': {'name': ingredientName, 'category': ingredientCategory},
+    };
   }
 }

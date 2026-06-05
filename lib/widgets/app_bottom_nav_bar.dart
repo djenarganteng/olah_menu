@@ -15,17 +15,17 @@ class AppBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const items = [
-      (Icons.kitchen_outlined, 'Pantry'),
-      (Icons.menu_book_outlined, 'Recipes'),
-      (Icons.delete_outline_rounded, 'Waste'),
-      (Icons.person_outline_rounded, 'Profile'),
+      (Icons.home_rounded, 'Beranda'),
+      (Icons.shopping_basket_rounded, 'Bahan'),
+      (Icons.menu_book_rounded, 'Resep'),
+      (Icons.favorite_rounded, 'Favorit'),
     ];
 
     return SafeArea(
       top: false,
       child: Container(
         margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(24),
@@ -39,41 +39,45 @@ class AppBottomNavBar extends StatelessWidget {
           ],
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: List.generate(items.length, (index) {
             final selected = index == currentIndex;
-            return InkWell(
-              borderRadius: BorderRadius.circular(18),
-              onTap: onSelected == null ? null : () => onSelected!(index),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: selected ? AppColors.primarySoft : Colors.transparent,
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      items[index].$1,
-                      size: 20,
-                      color: selected ? AppColors.primary : AppColors.text,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      items[index].$2,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontWeight: selected
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                        color: selected ? AppColors.primary : AppColors.text,
+            return Expanded(
+              child: InkWell(
+                borderRadius: BorderRadius.circular(18),
+                onTap: onSelected == null ? null : () => onSelected!(index),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? AppColors.primarySoft
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        items[index].$1,
+                        size: 20,
+                        color: selected
+                            ? AppColors.primary
+                            : AppColors.textSoft,
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 4),
+                      Text(
+                        items[index].$2,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontWeight: selected
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                          color: selected
+                              ? AppColors.primary
+                              : AppColors.textSoft,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );

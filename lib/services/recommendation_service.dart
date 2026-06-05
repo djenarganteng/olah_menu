@@ -30,31 +30,70 @@ class RecommendationService {
         continue;
       }
 
-      final matched = ingredients
+      final requiredIngredients = ingredients
+          .where((item) => item.isRequired)
+          .toList();
+      final optionalIngredients = ingredients
+          .where((item) => !item.isRequired)
+          .toList();
+
+      final matchedRequired = requiredIngredients
           .where((item) => selectedIngredientIds.contains(item.ingredientId))
           .toList();
-      final matchedCount = matched.length;
-      final totalCount = ingredients.length;
-      final matchPercentage = (matchedCount / totalCount) * 100;
+      final matchedOptional = optionalIngredients
+          .where((item) => selectedIngredientIds.contains(item.ingredientId))
+          .toList();
 
-      if (matchPercentage < 50) {
+      final requiredTotalCount = requiredIngredients.length;
+      final requiredMatchedCount = matchedRequired.length;
+      final optionalTotalCount = optionalIngredients.length;
+      final optionalMatchedCount = matchedOptional.length;
+
+      final requiredScore = requiredTotalCount == 0
+          ? 1.0
+          : requiredMatchedCount / requiredTotalCount;
+      final optionalScore = optionalTotalCount == 0
+          ? 1.0
+          : optionalMatchedCount / optionalTotalCount;
+      final matchPercentage = (requiredScore * 0.7 + optionalScore * 0.3) * 100;
+
+      if (requiredMatchedCount == 0 ||
+          requiredScore < 0.5 ||
+          matchPercentage < 50) {
         continue;
       }
 
-      final matchedNames = matched
-          .map((item) => item.ingredientName ?? 'Bahan tanpa nama')
-          .toList();
-      final missingNames = ingredients
+      final matchedIngredients = [...matchedRequired, ...matchedOptional];
+      final missingRequired = requiredIngredients
           .where((item) => !selectedIngredientIds.contains(item.ingredientId))
-          .map((item) => item.ingredientName ?? 'Bahan tanpa nama')
           .toList();
+      final missingOptional = optionalIngredients
+          .where((item) => !selectedIngredientIds.contains(item.ingredientId))
+          .toList();
+      final missingIngredients = [...missingRequired, ...missingOptional];
 
       recommendations.add(
         RecipeRecommendation(
           recipe: recipe,
           matchPercentage: matchPercentage,
-          missingIngredients: missingNames,
-          matchedIngredients: matchedNames,
+          matchedIngredients: matchedIngredients
+              .map((item) => item.ingredientName ?? 'Bahan tanpa nama')
+              .toList(),
+          missingIngredients: missingIngredients
+              .map((item) => item.ingredientName ?? 'Bahan tanpa nama')
+              .toList(),
+          missingRequiredIngredients: missingRequired
+              .map((item) => item.ingredientName ?? 'Bahan tanpa nama')
+              .toList(),
+          missingOptionalIngredients: missingOptional
+              .map((item) => item.ingredientName ?? 'Bahan tanpa nama')
+              .toList(),
+          totalIngredients: ingredients.length,
+          matchedIngredientCount: matchedIngredients.length,
+          requiredTotalCount: requiredTotalCount,
+          requiredMatchedCount: requiredMatchedCount,
+          optionalTotalCount: optionalTotalCount,
+          optionalMatchedCount: optionalMatchedCount,
         ),
       );
     }
@@ -63,6 +102,13 @@ class RecommendationService {
       final percentageCompare = b.matchPercentage.compareTo(a.matchPercentage);
       if (percentageCompare != 0) {
         return percentageCompare;
+      }
+
+      final requiredCompare = b.requiredMatchedCount.compareTo(
+        a.requiredMatchedCount,
+      );
+      if (requiredCompare != 0) {
+        return requiredCompare;
       }
 
       return a.recipe.name.compareTo(b.recipe.name);

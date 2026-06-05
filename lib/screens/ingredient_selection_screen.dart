@@ -5,9 +5,13 @@ import 'package:provider/provider.dart';
 import '../providers/ingredient_provider.dart';
 import '../providers/recommendation_provider.dart';
 import '../theme/app_colors.dart';
+import '../widgets/app_bottom_nav_bar.dart';
 import '../widgets/app_header.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/ingredient_chip.dart';
+import '../widgets/loading_state.dart';
+import 'all_recipes_screen.dart';
+import 'favorites_screen.dart';
 import 'recommendation_screen.dart';
 
 class IngredientSelectionScreen extends StatelessWidget {
@@ -16,7 +20,11 @@ class IngredientSelectionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const AppHeader(),
+      appBar: const AppHeader(title: 'Bahan Saya'),
+      bottomNavigationBar: AppBottomNavBar(
+        currentIndex: 1,
+        onSelected: (index) => _handleNavigation(context, index),
+      ),
       body: SafeArea(
         child: Consumer<IngredientProvider>(
           builder: (context, provider, _) {
@@ -28,16 +36,41 @@ class IngredientSelectionScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        TextField(
-                          onChanged: provider.setSearchQuery,
-                          decoration: const InputDecoration(
-                            hintText: 'Cari bahan...',
-                            prefixIcon: Icon(Icons.search_rounded),
+                        Text(
+                          'Bahan Saya',
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.w800),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Pilih bahan yang tersedia di rumahmu.',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: AppColors.textSoft),
+                        ),
+                        const SizedBox(height: 14),
+                        Container(
+                          decoration: BoxDecoration(
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x0A000000),
+                                blurRadius: 16,
+                                offset: Offset(0, 6),
+                              ),
+                            ],
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: TextField(
+                            onChanged: provider.setSearchQuery,
+                            decoration: const InputDecoration(
+                              hintText:
+                                  'Cari bahan, misalnya telur, nasi, ayam...',
+                              prefixIcon: Icon(Icons.search_rounded),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 16),
                         SizedBox(
-                          height: 38,
+                          height: 40,
                           child: ListView.separated(
                             scrollDirection: Axis.horizontal,
                             itemCount: provider.categories.length,
@@ -54,7 +87,30 @@ class IngredientSelectionScreen extends StatelessWidget {
                             },
                           ),
                         ),
-                        const SizedBox(height: 18),
+                        const SizedBox(height: 8),
+                        TextButton.icon(
+                          onPressed: () {
+                            final defaultNames = {
+                              'Garam',
+                              'Minyak Goreng',
+                              'Bawang Merah',
+                              'Bawang Putih',
+                              'Kecap',
+                            };
+                            for (final ingredient in provider.ingredients) {
+                              if (defaultNames.contains(ingredient.name) &&
+                                  !provider.isSelected(ingredient.id)) {
+                                provider.toggleSelection(ingredient);
+                              }
+                            }
+                          },
+                          icon: const Icon(
+                            Icons.auto_awesome_rounded,
+                            size: 18,
+                          ),
+                          label: const Text('Pilih Bumbu Dasar'),
+                        ),
+                        const SizedBox(height: 10),
                         Expanded(child: _buildContent(context, provider)),
                       ],
                     ),
@@ -71,15 +127,19 @@ class IngredientSelectionScreen extends StatelessWidget {
 
   Widget _buildContent(BuildContext context, IngredientProvider provider) {
     if (provider.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const LoadingState(
+        title: 'Memuat bahan...',
+        message: 'Kami sedang menyiapkan daftar bahan dari database.',
+        compact: true,
+      );
     }
 
     if (provider.errorMessage != null) {
       return EmptyState(
         icon: Icons.cloud_off_rounded,
         title: 'Bahan belum berhasil dimuat',
-        message: provider.errorMessage!,
-        actionLabel: 'Coba Lagi',
+        message: 'Gagal memuat data. Periksa koneksi internet kamu.',
+        actionLabel: 'Coba lagi',
         onAction: provider.loadIngredients,
       );
     }
@@ -96,7 +156,7 @@ class IngredientSelectionScreen extends StatelessWidget {
       return const EmptyState(
         icon: Icons.search_off_rounded,
         title: 'Bahan tidak ditemukan',
-        message: 'Coba ganti kata kunci pencarian atau filter kategori.',
+        message: 'Coba gunakan kata kunci lain atau ganti kategori bahan.',
       );
     }
 
@@ -115,6 +175,26 @@ class IngredientSelectionScreen extends StatelessWidget {
       },
     );
   }
+
+  void _handleNavigation(BuildContext context, int index) {
+    if (index == 0) {
+      Navigator.of(context).popUntil((route) => route.isFirst);
+      return;
+    }
+
+    if (index == 2) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(builder: (_) => const AllRecipesScreen()),
+      );
+      return;
+    }
+
+    if (index == 3) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(builder: (_) => const FavoritesScreen()),
+      );
+    }
+  }
 }
 
 class _BottomSelectionBar extends StatelessWidget {
@@ -128,7 +208,7 @@ class _BottomSelectionBar extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
       decoration: const BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         boxShadow: [
           BoxShadow(
             color: Color(0x14000000),
@@ -145,7 +225,9 @@ class _BottomSelectionBar extends StatelessWidget {
             Row(
               children: [
                 Text(
-                  '${provider.selectedCount} bahan terpilih',
+                  provider.selectedCount == 0
+                      ? 'Pilih minimal 1 bahan untuk mulai'
+                      : '${provider.selectedCount} bahan dipilih',
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     color: AppColors.primaryDark,
                     fontWeight: FontWeight.w700,
@@ -167,9 +249,7 @@ class _BottomSelectionBar extends StatelessWidget {
                     ? () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text(
-                              'Pilih minimal satu bahan terlebih dahulu.',
-                            ),
+                            content: Text('Pilih minimal satu bahan dulu, ya.'),
                           ),
                         );
                       }
@@ -192,7 +272,7 @@ class _BottomSelectionBar extends StatelessWidget {
                           ),
                         );
                       },
-                child: const Text('Tampilkan Rekomendasi'),
+                child: const Text('Cari Resep Sekarang'),
               ),
             ),
           ],

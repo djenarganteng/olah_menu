@@ -33,10 +33,11 @@ class SupabaseService {
         await _supabase
                 .from('recipe_ingredients')
                 .select(
-                  'id, recipe_id, ingredient_id, amount, unit, created_at, '
-                  'ingredients(name, category)',
+                  'id, recipe_id, ingredient_id, amount, unit, is_required, '
+                  'created_at, ingredients(name, category)',
                 )
                 .eq('recipe_id', recipeId)
+                .order('is_required', ascending: false)
                 .order('id')
             as List;
 
@@ -64,10 +65,11 @@ class SupabaseService {
         await _supabase
                 .from('recipe_ingredients')
                 .select(
-                  'id, recipe_id, ingredient_id, amount, unit, created_at, '
-                  'ingredients(name, category)',
+                  'id, recipe_id, ingredient_id, amount, unit, is_required, '
+                  'created_at, ingredients(name, category)',
                 )
                 .order('recipe_id')
+                .order('is_required', ascending: false)
                 .order('id')
             as List;
 
