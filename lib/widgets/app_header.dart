@@ -15,23 +15,36 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   final String title;
 
   @override
-  Size get preferredSize => const Size.fromHeight(64);
+  Size get preferredSize => const Size.fromHeight(72);
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       bottom: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(18, 12, 18, 0),
-        child: SizedBox(
-          height: 52,
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+        child: Container(
+          height: 54,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.78),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: AppColors.border),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0C000000),
+                blurRadius: 18,
+                offset: Offset(0, 8),
+              ),
+            ],
+          ),
           child: Row(
             children: [
               _CircleButton(
                 icon: showBackButton
                     ? Icons.arrow_back_rounded
-                    : Icons.restaurant_menu_rounded,
-                filled: !showBackButton,
+                    : Icons.close_rounded,
+                filled: true,
                 onTap: showBackButton
                     ? () => Navigator.of(context).maybePop()
                     : null,
@@ -40,18 +53,17 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                 child: Center(
                   child: Text(
                     title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: AppColors.primaryDark,
+                      color: AppColors.text,
                       fontWeight: FontWeight.w800,
+                      letterSpacing: -0.2,
                     ),
                   ),
                 ),
               ),
-              trailing ??
-                  const _CircleButton(
-                    icon: Icons.person_outline_rounded,
-                    filled: true,
-                  ),
+              trailing ?? const HeaderAvatar(),
             ],
           ),
         ),
@@ -68,9 +80,23 @@ class HeaderAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (imageUrl == null || imageUrl!.isEmpty) {
-      return const _CircleButton(
-        icon: Icons.person_outline_rounded,
-        filled: true,
+      return Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: const LinearGradient(
+            colors: [Color(0xFFE8C6A5), Color(0xFFF7E5C8)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: const Icon(
+          Icons.person_rounded,
+          size: 20,
+          color: AppColors.primaryDark,
+        ),
       );
     }
 

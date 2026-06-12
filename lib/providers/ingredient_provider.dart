@@ -3,6 +3,161 @@ import 'package:flutter/foundation.dart';
 import '../models/ingredient.dart';
 import '../services/supabase_service.dart';
 
+final List<Ingredient> _fallbackIngredients = [
+  Ingredient(
+    id: -1,
+    name: 'Wortel',
+    category: 'Sayur',
+    sortOrder: 1,
+    imageUrl:
+        'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/wortel.jpg',
+  ),
+  Ingredient(
+    id: -2,
+    name: 'Tempe',
+    category: 'Protein',
+    sortOrder: 2,
+    imageUrl:
+        'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/tempe.jpg',
+  ),
+  Ingredient(
+    id: -3,
+    name: 'Telur',
+    category: 'Protein',
+    sortOrder: 3,
+    imageUrl:
+        'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/telur.jpg',
+  ),
+  Ingredient(
+    id: -4,
+    name: 'Sawi',
+    category: 'Sayur',
+    sortOrder: 4,
+    imageUrl:
+        'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/sawi.jpg',
+  ),
+  Ingredient(
+    id: -5,
+    name: 'Minyak Goreng',
+    category: 'Bahan Dasar',
+    sortOrder: 5,
+    imageUrl:
+        'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/minyak_goreng.jpg',
+  ),
+  Ingredient(
+    id: -6,
+    name: 'Nasi',
+    category: 'Karbohidrat',
+    sortOrder: 6,
+    imageUrl:
+        'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/nasi.jpg',
+  ),
+  Ingredient(
+    id: -7,
+    name: 'Kentang',
+    category: 'Carb',
+    sortOrder: 7,
+    imageUrl:
+        'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/kentang.jpg',
+  ),
+  Ingredient(
+    id: -8,
+    name: 'Ayam',
+    category: 'Protein',
+    sortOrder: 8,
+    imageUrl:
+        'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/ayam.jpg',
+  ),
+  Ingredient(
+    id: -9,
+    name: 'Tahu',
+    category: 'Sayur/Bumbu',
+    sortOrder: 9,
+    imageUrl:
+        'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/tahu.jpg',
+  ),
+  Ingredient(
+    id: -10,
+    name: 'Brokoli',
+    category: 'Vegetable',
+    sortOrder: 10,
+    imageUrl:
+        'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/brokoli.jpg',
+  ),
+  Ingredient(
+    id: -11,
+    name: 'Kol',
+    category: 'Sayur',
+    sortOrder: 11,
+    imageUrl:
+        'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/kol.jpg',
+  ),
+  Ingredient(
+    id: -12,
+    name: 'Mie',
+    category: 'Karbohidrat',
+    sortOrder: 12,
+    imageUrl:
+        'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/mie.jpg',
+  ),
+  Ingredient(
+    id: -13,
+    name: 'Kecap',
+    category: 'Bumbu',
+    sortOrder: 13,
+    imageUrl:
+        'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/kecap.jpg',
+  ),
+  Ingredient(
+    id: -14,
+    name: 'Garam',
+    category: 'Bumbu',
+    sortOrder: 14,
+    imageUrl:
+        'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/garam.jpg',
+  ),
+  Ingredient(
+    id: -15,
+    name: 'Cabai',
+    category: 'Sayur/Bumbu',
+    sortOrder: 15,
+    imageUrl:
+        'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/cabai.jpg',
+  ),
+  Ingredient(
+    id: -16,
+    name: 'Bawang Putih',
+    category: 'Bumbu',
+    sortOrder: 16,
+    imageUrl:
+        'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/bawang_putih.jpg',
+  ),
+  Ingredient(
+    id: -17,
+    name: 'Bawang Merah',
+    category: 'Bumbu',
+    sortOrder: 17,
+    imageUrl:
+        'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/bawang_merah.jpg',
+  ),
+  Ingredient(
+    id: -18,
+    name: 'Bakso',
+    category: 'Protein',
+    sortOrder: 18,
+    imageUrl:
+        'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/bakso.jpg',
+  ),
+  Ingredient(
+    id: -19,
+    name: 'Daun Bawang',
+    category: 'Sayur',
+    sortOrder: 19,
+    imageUrl:
+        'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/daun_bawang.jpg',
+  ),
+];
+
 class IngredientProvider extends ChangeNotifier {
   IngredientProvider({required this.supabaseService});
 
@@ -56,7 +211,9 @@ class IngredientProvider extends ChangeNotifier {
     try {
       _ingredients = await supabaseService.getIngredients();
     } catch (error) {
-      _errorMessage = 'Gagal mengambil daftar bahan. Coba lagi sebentar.';
+      debugPrint('Failed to load ingredients from Supabase: $error');
+      _ingredients = List<Ingredient>.of(_fallbackIngredients);
+      _errorMessage = null;
     } finally {
       _isLoading = false;
       notifyListeners();

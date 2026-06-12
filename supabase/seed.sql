@@ -3,37 +3,36 @@ truncate table public.recipe_ingredients restart identity cascade;
 truncate table public.recipes restart identity cascade;
 truncate table public.ingredients restart identity cascade;
 
-insert into public.ingredients (name, category) values
-  ('Ayam', 'Protein'),
-  ('Bakso', 'Protein'),
-  ('Bawang Merah', 'Bumbu'),
-  ('Bawang Putih', 'Bumbu'),
-  ('Cabai', 'Bumbu'),
-  ('Daun Bawang', 'Sayur'),
-  ('Garam', 'Bumbu'),
-  ('Kecap', 'Bumbu'),
-  ('Kentang', 'Karbohidrat'),
-  ('Kol', 'Sayur'),
-  ('Mie', 'Karbohidrat'),
-  ('Minyak Goreng', 'Bumbu'),
-  ('Nasi', 'Karbohidrat'),
-  ('Sawi', 'Sayur'),
-  ('Sosis', 'Protein'),
-  ('Tahu', 'Protein'),
-  ('Telur', 'Protein'),
-  ('Tempe', 'Protein'),
-  ('Tomat', 'Sayur'),
-  ('Wortel', 'Sayur');
+insert into public.ingredients (name, category, sort_order, image_url) values
+  ('Wortel', 'Sayur', 1, 'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/wortel.jpg'),
+  ('Tempe', 'Protein', 2, 'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/tempe.jpg'),
+  ('Telur', 'Protein', 3, 'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/telur.jpg'),
+  ('Sawi', 'Sayur', 4, 'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/sawi.jpg'),
+  ('Minyak Goreng', 'Bahan Dasar', 5, 'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/minyak_goreng.jpg'),
+  ('Nasi', 'Karbohidrat', 6, 'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/nasi.jpg'),
+  ('Kentang', 'Carb', 7, 'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/kentang.jpg'),
+  ('Ayam', 'Protein', 8, 'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/ayam.jpg'),
+  ('Tahu', 'Sayur/Bumbu', 9, 'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/tahu.jpg'),
+  ('Brokoli', 'Vegetable', 10, 'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/brokoli.jpg'),
+  ('Kol', 'Sayur', 11, 'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/kol.jpg'),
+  ('Mie', 'Karbohidrat', 12, 'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/mie.jpg'),
+  ('Kecap', 'Bumbu', 13, 'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/kecap.jpg'),
+  ('Garam', 'Bumbu', 14, 'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/garam.jpg'),
+  ('Cabai', 'Sayur/Bumbu', 15, 'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/cabai.jpg'),
+  ('Bawang Putih', 'Bumbu', 16, 'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/bawang_putih.jpg'),
+  ('Bawang Merah', 'Bumbu', 17, 'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/bawang_merah.jpg'),
+  ('Bakso', 'Protein', 18, 'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/bakso.jpg'),
+  ('Daun Bawang', 'Sayur', 19, 'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/daun_bawang.jpg');
 
 insert into public.recipes (name, description, image_url, default_serving, cooking_time) values
-  ('Nasi Goreng Telur', 'Nasi goreng gurih dengan telur dan bumbu sederhana.', null, 2, 20),
-  ('Telur Dadar Cabai', 'Telur dadar pedas praktis untuk lauk cepat.', null, 2, 15),
-  ('Tahu Goreng Bumbu', 'Tahu goreng renyah dengan bumbu bawang dan kecap.', null, 2, 18),
-  ('Mie Goreng Sayur', 'Mie goreng sederhana dengan sayur segar.', null, 2, 20),
-  ('Sup Ayam Wortel', 'Sup hangat dengan ayam, wortel, dan kaldu ringan.', null, 3, 35),
-  ('Tempe Orek', 'Tempe manis gurih dengan kecap dan bawang.', null, 3, 20),
-  ('Tumis Sawi Bakso', 'Tumis sawi praktis dengan bakso dan bawang.', null, 2, 18),
-  ('Perkedel Kentang', 'Perkedel kentang lembut untuk lauk pendamping.', null, 3, 30);
+  ('Nasi Goreng Telur', 'Nasi goreng gurih dengan telur dan bumbu sederhana.', 'https://loremflickr.com/980/654/meal', 2, 20),
+  ('Telur Dadar Cabai', 'Telur dadar pedas praktis untuk lauk cepat.', 'https://loremflickr.com/980/654/egg', 2, 15),
+  ('Tahu Goreng Bumbu', 'Tahu goreng renyah dengan bumbu bawang dan kecap.', 'https://loremflickr.com/980/654/tofu', 2, 18),
+  ('Mie Goreng Sayur', 'Mie goreng sederhana dengan sayur segar.', 'https://loremflickr.com/980/654/noodle', 2, 20),
+  ('Sup Ayam Wortel', 'Sup hangat dengan ayam, wortel, dan kaldu ringan.', 'https://loremflickr.com/980/654/chicken', 3, 35),
+  ('Tempe Orek', 'Tempe manis gurih dengan kecap dan bawang.', 'https://loremflickr.com/980/654/food', 3, 20),
+  ('Tumis Sawi Bakso', 'Tumis sawi praktis dengan bakso dan bawang.', 'https://loremflickr.com/980/654/vegetable', 2, 18),
+  ('Perkedel Kentang', 'Perkedel kentang lembut untuk lauk pendamping.', 'https://loremflickr.com/980/654/potato', 3, 30);
 
 insert into public.recipe_ingredients (recipe_id, ingredient_id, amount, unit, is_required) values
   ((select id from public.recipes where name = 'Nasi Goreng Telur'), (select id from public.ingredients where name = 'Nasi'), 2, 'piring', true),

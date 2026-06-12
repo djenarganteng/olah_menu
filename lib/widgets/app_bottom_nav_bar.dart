@@ -16,7 +16,7 @@ class AppBottomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     const items = [
       (Icons.home_rounded, 'Beranda'),
-      (Icons.shopping_basket_rounded, 'Bahan'),
+      (Icons.shopping_bag_rounded, 'Bahan'),
       (Icons.menu_book_rounded, 'Resep'),
       (Icons.favorite_rounded, 'Favorit'),
     ];
@@ -24,17 +24,17 @@ class AppBottomNavBar extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Container(
-        margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        margin: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+        padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(24),
+          color: Colors.white.withValues(alpha: 0.95),
+          borderRadius: BorderRadius.circular(26),
           border: Border.all(color: AppColors.border),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x12000000),
-              blurRadius: 20,
-              offset: Offset(0, 8),
+              color: Color(0x14000000),
+              blurRadius: 22,
+              offset: Offset(0, 10),
             ),
           ],
         ),
@@ -43,10 +43,11 @@ class AppBottomNavBar extends StatelessWidget {
             final selected = index == currentIndex;
             return Expanded(
               child: InkWell(
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(20),
                 onTap: onSelected == null ? null : () => onSelected!(index),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOut,
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   decoration: BoxDecoration(
                     color: selected
@@ -59,7 +60,7 @@ class AppBottomNavBar extends StatelessWidget {
                     children: [
                       Icon(
                         items[index].$1,
-                        size: 20,
+                        size: 21,
                         color: selected
                             ? AppColors.primary
                             : AppColors.textSoft,
@@ -70,7 +71,7 @@ class AppBottomNavBar extends StatelessWidget {
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           fontWeight: selected
                               ? FontWeight.w700
-                              : FontWeight.w500,
+                              : FontWeight.w600,
                           color: selected
                               ? AppColors.primary
                               : AppColors.textSoft,

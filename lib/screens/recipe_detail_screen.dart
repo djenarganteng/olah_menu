@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../providers/ingredient_provider.dart';
 import '../models/recipe.dart';
 import '../models/recipe_ingredient.dart';
+import '../providers/ingredient_provider.dart';
 import '../providers/recipe_detail_provider.dart';
 import '../theme/app_colors.dart';
 import '../widgets/app_header.dart';
@@ -11,6 +11,7 @@ import '../widgets/cooking_step_item.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/loading_state.dart';
 import '../widgets/local_favorites_store.dart';
+import '../widgets/recipe_visual.dart';
 import '../widgets/section_title.dart';
 import '../widgets/serving_counter.dart';
 
@@ -53,12 +54,12 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
 
     return Scaffold(
       appBar: AppHeader(
-        title: 'Detail Resep',
+        title: widget.recipe.name,
         trailing: ValueListenableBuilder<Set<int>>(
           valueListenable: LocalFavoritesStore.favorites,
           builder: (context, favorites, _) {
             final isFavorite = favorites.contains(widget.recipe.id);
-            return IconButton(
+            return IconButton.filledTonal(
               onPressed: () async {
                 await LocalFavoritesStore.toggle(widget.recipe.id);
                 final message = isFavorite
@@ -76,7 +77,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                     ? Icons.favorite_rounded
                     : Icons.favorite_border_rounded,
                 color: isFavorite
-                    ? const Color(0xFFD94B68)
+                    ? const Color(0xFFD65A72)
                     : AppColors.primaryDark,
               ),
             );
@@ -120,16 +121,28 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
               ..sort((a, b) => a.stepNumber.compareTo(b.stepNumber));
 
             return ListView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+              padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
               children: [
-                _RecipeHero(recipe: widget.recipe),
-                const SizedBox(height: 18),
+                RecipeVisual(
+                  recipe: widget.recipe,
+                  height: 250,
+                  borderRadius: 30,
+                  topLabel: 'Recipe Detail',
+                ),
+                const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(24),
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(26),
                     border: Border.all(color: AppColors.border),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x10000000),
+                        blurRadius: 18,
+                        offset: Offset(0, 8),
+                      ),
+                    ],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -138,15 +151,39 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                         widget.recipe.name,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w800,
+                          letterSpacing: -0.2,
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.star_rounded,
+                            size: 18,
+                            color: Color(0xFFE0A340),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '4.9',
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                          const SizedBox(width: 14),
+                          Text(
+                            '23 comments',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: AppColors.textSoft),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
                       Text(
                         widget.recipe.description.isEmpty
                             ? 'Resep rumahan yang mudah diikuti dan cocok dimasak dari stok bahan yang tersedia.'
                             : widget.recipe.description,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           color: AppColors.textSoft,
+                          height: 1.5,
                         ),
                       ),
                       const SizedBox(height: 14),
@@ -171,12 +208,12 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 18),
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(20),
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
                     border: Border.all(color: AppColors.border),
                   ),
                   child: Row(
@@ -190,10 +227,11 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                               style: Theme.of(context).textTheme.titleMedium
                                   ?.copyWith(fontWeight: FontWeight.w800),
                             ),
-                            const SizedBox(height: 2),
+                            const SizedBox(height: 4),
                             Text(
                               'Takaran bahan akan berubah otomatis.',
-                              style: Theme.of(context).textTheme.bodySmall,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: AppColors.textSoft),
                             ),
                           ],
                         ),
@@ -210,9 +248,9 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
                 SectionTitle(
-                  title: 'Bahan-bahan',
+                  title: 'Ingredients',
                   subtitle:
                       'Semua takaran sudah disesuaikan dengan porsi pilihanmu.',
                   compact: true,
@@ -238,13 +276,13 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(22),
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
                     border: Border.all(color: AppColors.border),
                   ),
                   child: Column(
                     children: [
-                      const _IngredientGroupTitle(title: 'Wajib'),
+                      const _IngredientGroupTitle(title: 'From your pantry'),
                       ...requiredIngredients.map(
                         (ingredient) => _IngredientTile(
                           ingredient: ingredient,
@@ -256,7 +294,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                       ),
                       if (optionalIngredients.isNotEmpty) ...[
                         const SizedBox(height: 10),
-                        const _IngredientGroupTitle(title: 'Opsional'),
+                        const _IngredientGroupTitle(title: 'Optional'),
                         ...optionalIngredients.map(
                           (ingredient) => _IngredientTile(
                             ingredient: ingredient,
@@ -270,11 +308,11 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
                 const SectionTitle(
-                  title: 'Langkah Memasak',
+                  title: 'Steps',
                   subtitle:
-                      'Ikuti urutan berikut agar proses memasak terasa lebih rapi dan mudah.',
+                      'Ikuti urutan berikut agar proses memasak lebih rapi dan mudah.',
                   compact: true,
                 ),
                 const SizedBox(height: 12),
@@ -293,82 +331,6 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   }
 }
 
-class _RecipeHero extends StatelessWidget {
-  const _RecipeHero({required this.recipe});
-
-  final Recipe recipe;
-
-  @override
-  Widget build(BuildContext context) {
-    final imageUrl = recipe.imageUrl;
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(28),
-      child: Stack(
-        children: [
-          AspectRatio(
-            aspectRatio: 16 / 10,
-            child: imageUrl == null || imageUrl.isEmpty
-                ? Container(
-                    color: AppColors.primarySoft,
-                    child: const Icon(
-                      Icons.restaurant_rounded,
-                      size: 72,
-                      color: AppColors.primary,
-                    ),
-                  )
-                : Image.network(
-                    imageUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) {
-                      return Container(
-                        color: AppColors.primarySoft,
-                        child: const Icon(
-                          Icons.restaurant_rounded,
-                          size: 72,
-                          color: AppColors.primary,
-                        ),
-                      );
-                    },
-                  ),
-          ),
-          Positioned(
-            left: 16,
-            right: 16,
-            bottom: 16,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: const Color(0xB2000000),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.auto_awesome_rounded,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Masak nyaman dengan langkah yang ringkas dan bahan yang sudah terukur.',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _InfoPill extends StatelessWidget {
   const _InfoPill({required this.icon, required this.label});
 
@@ -378,7 +340,7 @@ class _InfoPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       decoration: BoxDecoration(
         color: AppColors.backgroundSoft,
         borderRadius: BorderRadius.circular(999),
@@ -386,13 +348,14 @@ class _InfoPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 18, color: AppColors.accent),
-          const SizedBox(width: 8),
+          Icon(icon, size: 15, color: AppColors.primary),
+          const SizedBox(width: 6),
           Text(
             label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: AppColors.text,
+            ),
           ),
         ],
       ),
@@ -407,13 +370,16 @@ class _IngredientGroupTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-          fontWeight: FontWeight.w800,
-          color: AppColors.primaryDark,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          title,
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w800,
+            color: AppColors.primaryDark,
+          ),
         ),
       ),
     );
@@ -424,35 +390,39 @@ class _IngredientTile extends StatelessWidget {
   const _IngredientTile({
     required this.ingredient,
     required this.adjustedAmount,
-    this.isOwned,
+    required this.isOwned,
   });
 
   final RecipeIngredient ingredient;
   final double adjustedAmount;
-  final bool? isOwned;
+  final bool isOwned;
 
   @override
   Widget build(BuildContext context) {
-    final isChecked = isOwned == true;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isOwned ? AppColors.primarySoft : AppColors.backgroundSoft,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: isOwned ? AppColors.primary : AppColors.border,
+        ),
+      ),
       child: Row(
         children: [
           Container(
-            width: 18,
-            height: 18,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
-              color: isChecked ? AppColors.primary : Colors.transparent,
-              borderRadius: BorderRadius.circular(5),
-              border: Border.all(
-                color: isChecked ? AppColors.primary : AppColors.border,
-                width: 1.4,
-              ),
+              color: isOwned ? AppColors.primary : Colors.white,
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: isChecked
-                ? const Icon(Icons.check_rounded, size: 14, color: Colors.white)
-                : null,
+            child: Icon(
+              isOwned ? Icons.check_rounded : Icons.kitchen_rounded,
+              color: isOwned ? Colors.white : AppColors.textSoft,
+              size: 18,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -460,40 +430,32 @@ class _IngredientTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  ingredient.ingredientName ?? 'Bahan',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                  ingredient.ingredientName ?? 'Bahan tanpa nama',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.text,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  ingredient.isRequired ? 'Wajib' : 'Opsional',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: ingredient.isRequired
-                        ? AppColors.primaryDark
-                        : AppColors.textSoft,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  ingredient.isRequired ? 'Required' : 'Optional',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: AppColors.textSoft),
                 ),
               ],
             ),
           ),
+          const SizedBox(width: 12),
           Text(
-            '${_formatAmount(adjustedAmount)} ${ingredient.unit}',
+            '${adjustedAmount.toStringAsFixed(adjustedAmount.truncateToDouble() == adjustedAmount ? 0 : 1)} ${ingredient.unit}',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppColors.text,
               fontWeight: FontWeight.w700,
+              color: AppColors.primaryDark,
             ),
           ),
         ],
       ),
     );
-  }
-
-  String _formatAmount(double value) {
-    if (value == value.roundToDouble()) {
-      return value.toStringAsFixed(0);
-    }
-    return value.toStringAsFixed(1);
   }
 }

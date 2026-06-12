@@ -10,7 +10,6 @@ import '../widgets/app_header.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/loading_state.dart';
 import '../widgets/recipe_card.dart';
-import '../widgets/section_title.dart';
 import 'all_recipes_screen.dart';
 import 'favorites_screen.dart';
 import 'ingredient_selection_screen.dart';
@@ -47,7 +46,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const AppHeader(title: 'Rekomendasi Resep'),
+      appBar: const AppHeader(title: 'Recipe Results'),
       bottomNavigationBar: AppBottomNavBar(
         currentIndex: 2,
         onSelected: (index) => _handleNavigation(context, index),
@@ -56,36 +55,19 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
         child: Consumer<RecommendationProvider>(
           builder: (context, provider, _) {
             return Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+              padding: const EdgeInsets.fromLTRB(16, 6, 16, 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SectionTitle(
-                    title: 'Rekomendasi Resep',
-                    subtitle: 'Berdasarkan bahan yang kamu pilih',
-                    compact: true,
+                  _TopBar(
+                    selectedCount: widget.selectedIngredients.length,
+                    onFilterTap: () => _showFilterSheet(context),
                   ),
                   const SizedBox(height: 12),
                   _SelectedIngredientSummary(
                     ingredients: widget.selectedIngredients,
                   ),
-                  const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: RecommendationFilter.values.map((filter) {
-                      return ChoiceChip(
-                        label: Text(_labelForFilter(filter)),
-                        selected: _selectedFilter == filter,
-                        onSelected: (_) {
-                          setState(() {
-                            _selectedFilter = filter;
-                          });
-                        },
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 14),
                   Expanded(child: _buildContent(context, provider)),
                 ],
               ),
@@ -130,9 +112,8 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
 
     final sortedRecommendations = _applyFilter(provider.recommendations);
 
-    return ListView.separated(
+    return ListView.builder(
       itemCount: sortedRecommendations.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 14),
       itemBuilder: (context, index) {
         final recommendation = sortedRecommendations[index];
         return RecipeCard(
@@ -196,6 +177,93 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     }
   }
 
+  void _showFilterSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          margin: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Filter resep',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 14),
+              ...RecommendationFilter.values.map((filter) {
+                final selected = filter == _selectedFilter;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(18),
+                    onTap: () {
+                      setState(() => _selectedFilter = filter);
+                      Navigator.of(context).pop();
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 14,
+                      ),
+                      decoration: BoxDecoration(
+                        color: selected
+                            ? AppColors.primarySoft
+                            : AppColors.backgroundSoft,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: selected
+                              ? AppColors.primary
+                              : AppColors.border,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            selected
+                                ? Icons.radio_button_checked_rounded
+                                : Icons.radio_button_off_rounded,
+                            color: selected
+                                ? AppColors.primary
+                                : AppColors.textSoft,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              _labelForFilter(filter),
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: selected
+                                        ? AppColors.primaryDark
+                                        : AppColors.text,
+                                  ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   void _handleNavigation(BuildContext context, int index) {
     if (index == 0) {
       Navigator.of(context).popUntil((route) => route.isFirst);
@@ -224,6 +292,47 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
   }
 }
 
+class _TopBar extends StatelessWidget {
+  const _TopBar({required this.selectedCount, required this.onFilterTap});
+
+  final int selectedCount;
+  final VoidCallback onFilterTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Recipe Results',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.4,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '$selectedCount ingredients selected',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: AppColors.textSoft),
+              ),
+            ],
+          ),
+        ),
+        IconButton.filledTonal(
+          onPressed: onFilterTap,
+          icon: const Icon(Icons.filter_alt_rounded),
+        ),
+      ],
+    );
+  }
+}
+
 class _SelectedIngredientSummary extends StatelessWidget {
   const _SelectedIngredientSummary({required this.ingredients});
 
@@ -231,71 +340,59 @@ class _SelectedIngredientSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const maxVisible = 4;
+    const maxVisible = 5;
     final visibleIngredients = ingredients.take(maxVisible).toList();
     final remainingCount = ingredients.length - visibleIngredients.length;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(color: AppColors.border),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 2),
-            child: Text(
-              'Bahan kamu:',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: AppColors.textSoft,
-              ),
+          Text(
+            'Bahan dipilih:',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: AppColors.textSoft,
             ),
           ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                ...visibleIngredients.map(
-                  (ingredient) =>
-                      _CompactIngredientChip(label: ingredient.name),
-                ),
-                if (remainingCount > 0)
-                  _CompactIngredientChip(label: '+$remainingCount bahan'),
-              ],
-            ),
+          ...visibleIngredients.map(
+            (ingredient) => _IngredientPill(label: ingredient.name),
           ),
+          if (remainingCount > 0)
+            _IngredientPill(label: '+$remainingCount lainnya'),
         ],
       ),
     );
   }
 }
 
-class _CompactIngredientChip extends StatelessWidget {
-  const _CompactIngredientChip({required this.label});
+class _IngredientPill extends StatelessWidget {
+  const _IngredientPill({required this.label});
 
   final String label;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: AppColors.primarySoft,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: AppColors.border),
       ),
       child: Text(
         label,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: AppColors.primaryDark,
           fontWeight: FontWeight.w700,
-          color: AppColors.text,
         ),
       ),
     );

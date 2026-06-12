@@ -12,9 +12,20 @@ class SupabaseService {
     final response =
         await _supabase.from('ingredients').select().order('name') as List;
 
-    return response
+    final ingredients = response
         .map((item) => Ingredient.fromMap(item as Map<String, dynamic>))
         .toList();
+
+    ingredients.sort((a, b) {
+      final aRank = _ingredientRank(a);
+      final bRank = _ingredientRank(b);
+      if (aRank != bRank) {
+        return aRank.compareTo(bRank);
+      }
+      return a.name.compareTo(b.name);
+    });
+
+    return ingredients;
   }
 
   Future<List<Recipe>> getRecipes() async {
@@ -76,5 +87,39 @@ class SupabaseService {
     return response
         .map((item) => RecipeIngredient.fromMap(item as Map<String, dynamic>))
         .toList();
+  }
+
+  int _ingredientRank(Ingredient ingredient) {
+    final value = '${ingredient.name} ${ingredient.category}'.toLowerCase();
+
+    const orderedNames = <String>[
+      'wortel',
+      'tempe',
+      'telur',
+      'sawi',
+      'minyak goreng',
+      'nasi',
+      'kentang',
+      'ayam',
+      'tahu',
+      'brokoli',
+      'kol',
+      'mie',
+      'kecap',
+      'garam',
+      'cabai',
+      'bawang putih',
+      'bawang merah',
+      'bakso',
+      'daun bawang',
+    ];
+
+    for (var index = 0; index < orderedNames.length; index++) {
+      if (value.contains(orderedNames[index])) {
+        return index;
+      }
+    }
+
+    return 9999;
   }
 }
