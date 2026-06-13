@@ -3,8 +3,11 @@ import 'package:provider/provider.dart';
 
 import '../models/ingredient.dart';
 import '../models/recipe_recommendation.dart';
+import '../providers/ai_recipe_provider.dart';
 import '../providers/recommendation_provider.dart';
 import '../theme/app_colors.dart';
+import '../widgets/ai_recipe_card.dart';
+import '../widgets/ai_recipe_skeleton.dart';
 import '../widgets/app_bottom_nav_bar.dart';
 import '../widgets/app_header.dart';
 import '../widgets/empty_state.dart';
@@ -40,6 +43,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
       context.read<RecommendationProvider>().fetchRecommendations(
         widget.selectedIngredients,
       );
+      context.read<AiRecipeProvider>().reset();
     });
   }
 
@@ -100,13 +104,43 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     }
 
     if (provider.recommendations.isEmpty) {
-      return EmptyState(
-        icon: Icons.ramen_dining_outlined,
-        title: 'Belum ada resep yang cocok',
-        message:
-            'Coba tambah bahan seperti telur, nasi, bawang, atau minyak agar pilihan resep lebih banyak.',
-        actionLabel: 'Tambah Bahan',
-        onAction: () => Navigator.of(context).pop(),
+      return Consumer<AiRecipeProvider>(
+        builder: (context, aiProvider, _) {
+          if (aiProvider.state == AiRecipeState.loading) {
+            return const SingleChildScrollView(
+              padding: EdgeInsets.only(bottom: 8),
+              child: AiRecipeSkeleton(),
+            );
+          }
+
+          if (aiProvider.state == AiRecipeState.success &&
+              aiProvider.recipe != null) {
+            return ListView(
+              children: [
+                AiRecipeCard(
+                  recipe: aiProvider.recipe!,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) =>
+                            RecipeDetailScreen.ai(recipe: aiProvider.recipe!),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            );
+          }
+
+          return EmptyState(
+            icon: Icons.soup_kitchen_rounded,
+            title: 'Belum ada resep yang cocok',
+            message:
+                'Coba buat resep menggunakan AI berdasarkan bahan yang dipilih.',
+            actionLabel: '✨ Buat Resep dengan AI',
+            onAction: () => _generateAiRecipe(context, aiProvider),
+          );
+        },
       );
     }
 
@@ -132,6 +166,23 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
           },
         );
       },
+    );
+  }
+
+  Future<void> _generateAiRecipe(
+    BuildContext context,
+    AiRecipeProvider provider,
+  ) async {
+    await provider.generateFromIngredients(widget.selectedIngredients);
+
+    if (!context.mounted || provider.state != AiRecipeState.error) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Gagal membuat resep AI. Silakan coba lagi.'),
+      ),
     );
   }
 

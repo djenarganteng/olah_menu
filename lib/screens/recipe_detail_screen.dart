@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/ai_recipe.dart';
 import '../models/recipe.dart';
 import '../models/recipe_ingredient.dart';
 import '../providers/ingredient_provider.dart';
@@ -20,9 +21,15 @@ class RecipeDetailScreen extends StatefulWidget {
     super.key,
     required this.recipe,
     this.selectedIngredientIds,
-  });
+  }) : aiRecipe = null;
 
-  final Recipe recipe;
+  const RecipeDetailScreen.ai({super.key, required AiRecipe recipe})
+    : recipe = null,
+      aiRecipe = recipe,
+      selectedIngredientIds = null;
+
+  final Recipe? recipe;
+  final AiRecipe? aiRecipe;
   final Set<int>? selectedIngredientIds;
 
   @override
@@ -38,12 +45,21 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
         return;
       }
 
-      context.read<RecipeDetailProvider>().loadRecipeDetails(widget.recipe);
+      final recipe = widget.recipe;
+      if (recipe != null) {
+        context.read<RecipeDetailProvider>().loadRecipeDetails(recipe);
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final aiRecipe = widget.aiRecipe;
+    if (aiRecipe != null) {
+      return _AiRecipeDetailView(recipe: aiRecipe);
+    }
+
+    final recipe = widget.recipe!;
     final selectedIngredientIds =
         widget.selectedIngredientIds ??
         context
@@ -54,14 +70,14 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
 
     return Scaffold(
       appBar: AppHeader(
-        title: widget.recipe.name,
+        title: recipe.name,
         trailing: ValueListenableBuilder<Set<int>>(
           valueListenable: LocalFavoritesStore.favorites,
           builder: (context, favorites, _) {
-            final isFavorite = favorites.contains(widget.recipe.id);
+            final isFavorite = favorites.contains(recipe.id);
             return IconButton.filledTonal(
               onPressed: () async {
-                await LocalFavoritesStore.toggle(widget.recipe.id);
+                await LocalFavoritesStore.toggle(recipe.id);
                 final message = isFavorite
                     ? 'Resep dihapus dari favorit.'
                     : 'Resep disimpan ke favorit.';
@@ -106,7 +122,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                   title: 'Detail resep belum tersedia',
                   message: 'Gagal memuat data. Periksa koneksi internet kamu.',
                   actionLabel: 'Coba lagi',
-                  onAction: () => provider.loadRecipeDetails(widget.recipe),
+                  onAction: () => provider.loadRecipeDetails(recipe),
                 ),
               );
             }
@@ -124,7 +140,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
               padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
               children: [
                 RecipeVisual(
-                  recipe: widget.recipe,
+                  recipe: recipe,
                   height: 250,
                   borderRadius: 30,
                   topLabel: 'Recipe Detail',
@@ -148,7 +164,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.recipe.name,
+                        recipe.name,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.2,
@@ -178,9 +194,9 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        widget.recipe.description.isEmpty
+                        recipe.description.isEmpty
                             ? 'Resep rumahan yang mudah diikuti dan cocok dimasak dari stok bahan yang tersedia.'
-                            : widget.recipe.description,
+                            : recipe.description,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           color: AppColors.textSoft,
                           height: 1.5,
@@ -193,7 +209,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                         children: [
                           _InfoPill(
                             icon: Icons.schedule_rounded,
-                            label: '${widget.recipe.cookingTime} menit',
+                            label: '${recipe.cookingTime} menit',
                           ),
                           _InfoPill(
                             icon: Icons.people_alt_outlined,
@@ -327,6 +343,303 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
           },
         ),
       ),
+    );
+  }
+}
+
+class _AiRecipeDetailView extends StatelessWidget {
+  const _AiRecipeDetailView({required this.recipe});
+
+  final AiRecipe recipe;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppHeader(title: recipe.title),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
+          children: [
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(color: AppColors.border),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x10000000),
+                    blurRadius: 18,
+                    offset: Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _AiDetailBadge(text: recipe.sourceBadgeLabel),
+                  const SizedBox(height: 14),
+                  Text(
+                    recipe.title,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    recipe.description.isEmpty
+                        ? 'Resep ini dibuat oleh AI berdasarkan bahan yang tersedia.'
+                        : recipe.description,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: AppColors.textSoft,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Resep ini dibuat oleh AI berdasarkan bahan yang tersedia.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.primaryDark,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: [
+                      _InfoPill(
+                        icon: Icons.schedule_rounded,
+                        label: '${recipe.cookingTime} menit',
+                      ),
+                      _InfoPill(
+                        icon: Icons.people_alt_outlined,
+                        label: '${recipe.servings} porsi',
+                      ),
+                      const _InfoPill(
+                        icon: Icons.auto_awesome_rounded,
+                        label: 'AI Generated',
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  ValueListenableBuilder<List<AiRecipe>>(
+                    valueListenable: LocalFavoritesStore.aiFavorites,
+                    builder: (context, _, _) {
+                      final isFavorite = LocalFavoritesStore.isAiFavorite(
+                        recipe.id,
+                      );
+
+                      return SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: () =>
+                              LocalFavoritesStore.toggleAiRecipe(recipe),
+                          icon: Icon(
+                            isFavorite
+                                ? Icons.favorite_rounded
+                                : Icons.favorite_border_rounded,
+                          ),
+                          label: Text(
+                            isFavorite
+                                ? 'Tersimpan di Favorit'
+                                : 'Simpan ke Favorit',
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            SectionTitle(
+              title: 'Ingredients',
+              subtitle: 'Bahan pilihan dan bumbu umum yang disarankan AI.',
+              compact: true,
+              trailing: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.primarySoft,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  '${recipe.ingredients.length} item',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.primaryDark,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Column(
+                children: recipe.ingredients
+                    .map((ingredient) => _AiIngredientTile(label: ingredient))
+                    .toList(),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const SectionTitle(
+              title: 'Steps',
+              subtitle: 'Ikuti urutan berikut dan sesuaikan rasa di akhir.',
+              compact: true,
+            ),
+            const SizedBox(height: 12),
+            ...recipe.steps.asMap().entries.map(
+              (entry) => _AiStepTile(
+                number: entry.key + 1,
+                instruction: entry.value,
+                isLast: entry.key == recipe.steps.length - 1,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AiDetailBadge extends StatelessWidget {
+  const _AiDetailBadge({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF3D8),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppColors.accent.withValues(alpha: 0.35)),
+      ),
+      child: Text(
+        text,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: const Color(0xFF8A5A18),
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+}
+
+class _AiIngredientTile extends StatelessWidget {
+  const _AiIngredientTile({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundSoft,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: AppColors.primarySoft,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.check_rounded,
+              color: AppColors.primary,
+              size: 18,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              label,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: AppColors.text,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AiStepTile extends StatelessWidget {
+  const _AiStepTile({
+    required this.number,
+    required this.instruction,
+    required this.isLast,
+  });
+
+  final int number;
+  final String instruction;
+  final bool isLast;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Column(
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(
+                child: Text(
+                  '$number',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ),
+            if (!isLast)
+              Container(width: 2, height: 48, color: AppColors.border),
+          ],
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Text(
+              instruction,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.text,
+                height: 1.45,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

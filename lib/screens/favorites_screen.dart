@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/ai_recipe.dart';
 import '../models/recipe.dart';
 import '../services/supabase_service.dart';
+import '../widgets/ai_recipe_card.dart';
 import '../widgets/app_bottom_nav_bar.dart';
 import '../widgets/app_header.dart';
 import '../widgets/empty_state.dart';
@@ -43,63 +45,84 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           child: ValueListenableBuilder<Set<int>>(
             valueListenable: LocalFavoritesStore.favorites,
             builder: (context, favorites, _) {
-              return FutureBuilder<List<Recipe>>(
-                future: _future,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState != ConnectionState.done) {
-                    return const LoadingState(
-                      title: 'Memuat favorit',
-                      message:
-                          'Kami sedang menyiapkan resep yang sudah kamu simpan.',
-                      compact: true,
-                    );
-                  }
+              return ValueListenableBuilder<List<AiRecipe>>(
+                valueListenable: LocalFavoritesStore.aiFavorites,
+                builder: (context, aiFavorites, _) {
+                  return FutureBuilder<List<Recipe>>(
+                    future: _future,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState != ConnectionState.done) {
+                        return const LoadingState(
+                          title: 'Memuat favorit',
+                          message:
+                              'Kami sedang menyiapkan resep yang sudah kamu simpan.',
+                          compact: true,
+                        );
+                      }
 
-                  if (snapshot.hasError) {
-                    return EmptyState(
-                      icon: Icons.cloud_off_rounded,
-                      title: 'Favorit belum bisa dimuat',
-                      message: 'Periksa koneksi internet kamu lalu coba lagi.',
-                      actionLabel: 'Coba lagi',
-                      onAction: () {
-                        setState(() {
-                          _future = context
-                              .read<SupabaseService>()
-                              .getRecipes();
-                        });
-                      },
-                    );
-                  }
+                      if (snapshot.hasError) {
+                        return EmptyState(
+                          icon: Icons.cloud_off_rounded,
+                          title: 'Favorit belum bisa dimuat',
+                          message:
+                              'Periksa koneksi internet kamu lalu coba lagi.',
+                          actionLabel: 'Coba lagi',
+                          onAction: () {
+                            setState(() {
+                              _future = context
+                                  .read<SupabaseService>()
+                                  .getRecipes();
+                            });
+                          },
+                        );
+                      }
 
-                  final recipes = snapshot.data!
-                      .where((recipe) => favorites.contains(recipe.id))
-                      .toList();
+                      final recipes = snapshot.data!
+                          .where((recipe) => favorites.contains(recipe.id))
+                          .toList();
+                      final favoriteCards = <Widget>[
+                        ...recipes.map(
+                          (recipe) => RecipeSummaryCard(
+                            recipe: recipe,
+                            ingredientCount: 0,
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) =>
+                                      RecipeDetailScreen(recipe: recipe),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        ...aiFavorites.map(
+                          (recipe) => AiRecipeCard(
+                            recipe: recipe,
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) =>
+                                      RecipeDetailScreen.ai(recipe: recipe),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ];
 
-                  if (recipes.isEmpty) {
-                    return const EmptyState(
-                      icon: Icons.favorite_border_rounded,
-                      title: 'Belum ada resep favorit',
-                      message:
-                          'Simpan resep yang kamu suka agar mudah ditemukan lagi.',
-                    );
-                  }
+                      if (favoriteCards.isEmpty) {
+                        return const EmptyState(
+                          icon: Icons.favorite_border_rounded,
+                          title: 'Belum ada resep favorit',
+                          message:
+                              'Simpan resep yang kamu suka agar mudah ditemukan lagi.',
+                        );
+                      }
 
-                  return ListView.separated(
-                    itemCount: recipes.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      final recipe = recipes[index];
-                      return RecipeSummaryCard(
-                        recipe: recipe,
-                        ingredientCount: 0,
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) =>
-                                  RecipeDetailScreen(recipe: recipe),
-                            ),
-                          );
-                        },
+                      return ListView.separated(
+                        itemCount: favoriteCards.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) => favoriteCards[index],
                       );
                     },
                   );

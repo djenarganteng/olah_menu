@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'providers/ai_recipe_provider.dart';
 import 'providers/ingredient_provider.dart';
 import 'providers/recommendation_provider.dart';
 import 'providers/recipe_detail_provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/splash_screen.dart';
+import 'services/ai_recipe_service.dart';
 import 'services/recommendation_service.dart';
 import 'services/supabase_service.dart';
 import 'theme/app_colors.dart';
@@ -33,11 +35,13 @@ class OlahMenuApp extends StatelessWidget {
     final recommendationService = RecommendationService(
       supabaseService: supabaseService,
     );
+    final aiRecipeService = AiRecipeService();
 
     return MultiProvider(
       providers: [
         Provider<SupabaseService>.value(value: supabaseService),
         Provider<RecommendationService>.value(value: recommendationService),
+        Provider<AiRecipeService>.value(value: aiRecipeService),
         ChangeNotifierProvider(
           create: (_) =>
               IngredientProvider(supabaseService: supabaseService)
@@ -47,6 +51,9 @@ class OlahMenuApp extends StatelessWidget {
           create: (_) => RecommendationProvider(
             recommendationService: recommendationService,
           ),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => AiRecipeProvider(aiRecipeService: aiRecipeService),
         ),
         ChangeNotifierProvider(
           create: (_) => RecipeDetailProvider(supabaseService: supabaseService),
