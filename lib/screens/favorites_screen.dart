@@ -17,6 +17,8 @@ import 'ingredient_selection_screen.dart';
 import 'profile_screen.dart';
 import 'recipe_detail_screen.dart';
 
+enum FavoriteFilter { all, database, ai }
+
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
 
@@ -26,6 +28,7 @@ class FavoritesScreen extends StatefulWidget {
 
 class _FavoritesScreenState extends State<FavoritesScreen> {
   late Future<List<Recipe>> _future;
+  FavoriteFilter _selectedFilter = FavoriteFilter.all;
 
   @override
   void initState() {
@@ -60,6 +63,22 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 color: AppColors.textSoft,
                 height: 1.5,
               ),
+            ),
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: FavoriteFilter.values.map((filter) {
+                return ChoiceChip(
+                  label: Text(_labelFor(filter)),
+                  selected: _selectedFilter == filter,
+                  onSelected: (_) {
+                    setState(() {
+                      _selectedFilter = filter;
+                    });
+                  },
+                );
+              }).toList(),
             ),
             const SizedBox(height: 14),
             ValueListenableBuilder<Set<int>>(
@@ -101,33 +120,35 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                             .where((recipe) => favorites.contains(recipe.id))
                             .toList();
                         final favoriteCards = <Widget>[
-                          ...recipes.map(
-                            (recipe) => RecipeSummaryCard(
-                              recipe: recipe,
-                              ingredientCount: 0,
-                              onTap: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute<void>(
-                                    builder: (_) =>
-                                        RecipeDetailScreen(recipe: recipe),
-                                  ),
-                                );
-                              },
+                          if (_selectedFilter != FavoriteFilter.ai)
+                            ...recipes.map(
+                              (recipe) => RecipeSummaryCard(
+                                recipe: recipe,
+                                ingredientCount: 0,
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute<void>(
+                                      builder: (_) =>
+                                          RecipeDetailScreen(recipe: recipe),
+                                    ),
+                                  );
+                                },
+                              ),
                             ),
-                          ),
-                          ...aiFavorites.map(
-                            (recipe) => AiRecipeCard(
-                              recipe: recipe,
-                              onTap: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute<void>(
-                                    builder: (_) =>
-                                        RecipeDetailScreen.ai(recipe: recipe),
-                                  ),
-                                );
-                              },
+                          if (_selectedFilter != FavoriteFilter.database)
+                            ...aiFavorites.map(
+                              (recipe) => AiRecipeCard(
+                                recipe: recipe,
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute<void>(
+                                      builder: (_) =>
+                                          RecipeDetailScreen.ai(recipe: recipe),
+                                    ),
+                                  );
+                                },
+                              ),
                             ),
-                          ),
                         ];
 
                         if (favoriteCards.isEmpty) {
@@ -182,6 +203,17 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute<void>(builder: (_) => const ProfileScreen()),
       );
+    }
+  }
+
+  String _labelFor(FavoriteFilter filter) {
+    switch (filter) {
+      case FavoriteFilter.all:
+        return 'Semua';
+      case FavoriteFilter.database:
+        return 'Database';
+      case FavoriteFilter.ai:
+        return 'AI';
     }
   }
 }

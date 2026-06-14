@@ -19,7 +19,6 @@ class IngredientChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = _accentColorForIngredient(ingredient);
-    final palette = _paletteForIngredient(ingredient);
     final imageUrl = _imageUrlForIngredient(ingredient);
 
     return Material(
@@ -32,23 +31,20 @@ class IngredientChip extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: isSelected
-                  ? [
-                      palette.base.withValues(alpha: 0.7),
-                      const Color(0xFFF4FAF0),
-                    ]
+                  ? [AppColors.primarySoft, const Color(0xFFF7FBF5)]
                   : [const Color(0xFFEBF4E4), const Color(0xFFF8FCF6)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: isSelected ? palette.primary : const Color(0xFFD2E1C9),
+              color: isSelected ? AppColors.primary : const Color(0xFFD2E1C9),
               width: isSelected ? 1.6 : 1.0,
             ),
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: palette.primary.withValues(alpha: 0.12),
+                      color: AppColors.primary.withValues(alpha: 0.12),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -139,7 +135,7 @@ class IngredientChip extends StatelessWidget {
                           top: -4,
                           child: _SelectionDot(
                             isSelected: isSelected,
-                            primary: palette.primary,
+                            primary: AppColors.primary,
                           ),
                         ),
                       ],
@@ -298,76 +294,4 @@ String _imageUrlForIngredient(Ingredient ingredient) {
     return '';
   }
   return current;
-}
-
-class _IngredientPalette {
-  const _IngredientPalette({required this.primary, required this.base});
-
-  final Color primary;
-  final Color base;
-}
-
-_IngredientPalette _paletteForIngredient(Ingredient ingredient) {
-  final value = '${ingredient.name} ${ingredient.category}'.toLowerCase();
-  if (value.contains('telur')) {
-    return const _IngredientPalette(
-      primary: Color(0xFFE0A23A),
-      base: Color(0xFFFDF5E6),
-    );
-  }
-  if (value.contains('ayam') ||
-      value.contains('daging') ||
-      value.contains('bakso')) {
-    return const _IngredientPalette(
-      primary: Color(0xFFD66D4F),
-      base: Color(0xFFFDF0ED),
-    );
-  }
-  if (value.contains('tahu') || value.contains('tempe')) {
-    return const _IngredientPalette(
-      primary: Color(0xFFC48A4E),
-      base: Color(0xFFFAF2E8),
-    );
-  }
-  if (value.contains('brokoli') ||
-      value.contains('sawi') ||
-      value.contains('kol') ||
-      value.contains('bayam') ||
-      value.contains('wortel') ||
-      value.contains('tomat') ||
-      value.contains('sayur')) {
-    return const _IngredientPalette(
-      primary: Color(0xFF5F8F57),
-      base: Color(0xFFF0F7EC),
-    );
-  }
-  if (value.contains('kentang') ||
-      value.contains('nasi') ||
-      value.contains('mie')) {
-    return const _IngredientPalette(
-      primary: Color(0xFFB98C4A),
-      base: Color(0xFFFAF3E6),
-    );
-  }
-  if (value.contains('cabai')) {
-    return const _IngredientPalette(
-      primary: Color(0xFFD65A3C),
-      base: Color(0xFFFDF0ED),
-    );
-  }
-  if (value.contains('garam') ||
-      value.contains('minyak') ||
-      value.contains('kecap') ||
-      value.contains('bawang') ||
-      value.contains('bumbu') ||
-      value.contains('pantry')) {
-    return const _IngredientPalette(
-      primary: Color(0xFF9B7A53),
-      base: Color(0xFFF6F0E7),
-    );
-  }
-  return const _IngredientPalette(
-    primary: AppColors.primaryDark,
-    base: AppColors.primarySoft,
-  );
 }

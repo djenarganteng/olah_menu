@@ -472,8 +472,21 @@ Future<void> _pickAvatar(BuildContext context) async {
     return;
   }
   final extension = file.name.split('.').last;
-  await context.read<AuthProvider>().updateAvatar(
-    bytes: Uint8List.fromList(bytes),
-    extension: extension,
-  );
+  try {
+    await context.read<AuthProvider>().updateAvatar(
+      bytes: Uint8List.fromList(bytes),
+      extension: extension,
+    );
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Foto profil berhasil diperbarui.')),
+      );
+    }
+  } catch (_) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Gagal memperbarui foto profil.')),
+      );
+    }
+  }
 }

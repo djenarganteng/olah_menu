@@ -728,12 +728,15 @@ class _IngredientTile extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: isOwned ? AppColors.primary : Colors.white,
+              color: isOwned ? Colors.white : Colors.white,
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isOwned ? AppColors.primary : Colors.transparent,
+              ),
             ),
             child: Icon(
               isOwned ? Icons.check_rounded : Icons.kitchen_rounded,
-              color: isOwned ? Colors.white : AppColors.textSoft,
+              color: isOwned ? AppColors.primary : AppColors.textSoft,
               size: 18,
             ),
           ),

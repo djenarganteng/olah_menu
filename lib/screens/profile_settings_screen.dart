@@ -179,7 +179,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              '• Minimal 8 karakter\n• Mengandung huruf besar dan angka',
+                              '- Minimal 8 karakter\n- Mengandung huruf besar dan angka',
                               style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(color: AppColors.textSoft),
                             ),

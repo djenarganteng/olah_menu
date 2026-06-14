@@ -51,7 +51,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const AppHeader(title: 'Recipe Results'),
+      appBar: const AppHeader(title: 'Hasil Resep'),
       bottomNavigationBar: AppBottomNavBar(
         currentIndex: 2,
         onSelected: (index) => _handleNavigation(context, index),
@@ -362,7 +362,7 @@ class _TopBar extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Recipe Results',
+                'Hasil Resep',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
@@ -371,7 +371,7 @@ class _TopBar extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                '$selectedCount ingredients selected',
+                '$selectedCount bahan dipilih',
                 style: Theme.of(
                   context,
                 ).textTheme.bodySmall?.copyWith(color: AppColors.textSoft),

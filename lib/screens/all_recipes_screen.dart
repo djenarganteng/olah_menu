@@ -51,7 +51,7 @@ class _AllRecipesScreenState extends State<AllRecipesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const AppHeader(title: 'All Recipes'),
+      appBar: const AppHeader(title: 'Daftar Resep'),
       bottomNavigationBar: AppBottomNavBar(
         currentIndex: 2,
         onSelected: (index) => _handleNavigation(context, index),
@@ -155,26 +155,39 @@ class _AllRecipesScreenState extends State<AllRecipesScreen> {
       );
     }
 
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: recipes.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        final recipe = recipes[index];
-        final count = data.ingredientsMap[recipe.id]?.length ?? 0;
-        return RecipeSummaryCard(
-          recipe: recipe,
-          ingredientCount: count,
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => RecipeDetailScreen(recipe: recipe),
-              ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '${recipes.length} resep ditemukan',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: AppColors.textSoft,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 12),
+        ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: recipes.length,
+          separatorBuilder: (_, _) => const SizedBox(height: 12),
+          itemBuilder: (context, index) {
+            final recipe = recipes[index];
+            final count = data.ingredientsMap[recipe.id]?.length ?? 0;
+            return RecipeSummaryCard(
+              recipe: recipe,
+              ingredientCount: count,
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => RecipeDetailScreen(recipe: recipe),
+                  ),
+                );
+              },
             );
           },
-        );
-      },
+        ),
+      ],
     );
   }
 

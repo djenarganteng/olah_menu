@@ -21,7 +21,7 @@ class IngredientSelectionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const AppHeader(title: 'Select Ingredients'),
+      appBar: const AppHeader(title: 'Pilih Bahan'),
       bottomNavigationBar: AppBottomNavBar(
         currentIndex: 1,
         onSelected: (index) => _handleNavigation(context, index),
@@ -110,7 +110,7 @@ class IngredientSelectionScreen extends StatelessWidget {
                           }
                         },
                         icon: const Icon(Icons.auto_awesome_rounded, size: 18),
-                        label: const Text('Pilih bumbu dasar'),
+                        label: const Text('Tambah bumbu dasar'),
                       ),
                     ),
                     const SizedBox(height: 10),
