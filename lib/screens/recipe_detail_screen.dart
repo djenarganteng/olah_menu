@@ -143,7 +143,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                   recipe: recipe,
                   height: 250,
                   borderRadius: 30,
-                  topLabel: 'Recipe Detail',
+                  topLabel: 'Detail Resep',
                 ),
                 const SizedBox(height: 16),
                 Container(
@@ -186,7 +186,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                           ),
                           const SizedBox(width: 14),
                           Text(
-                            '23 comments',
+                            '23 ulasan',
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(color: AppColors.textSoft),
                           ),
@@ -266,7 +266,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                 ),
                 const SizedBox(height: 20),
                 SectionTitle(
-                  title: 'Ingredients',
+                  title: 'Bahan',
                   subtitle:
                       'Semua takaran sudah disesuaikan dengan porsi pilihanmu.',
                   compact: true,
@@ -298,7 +298,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                   ),
                   child: Column(
                     children: [
-                      const _IngredientGroupTitle(title: 'From your pantry'),
+                      const _IngredientGroupTitle(title: 'Bahan utama'),
                       ...requiredIngredients.map(
                         (ingredient) => _IngredientTile(
                           ingredient: ingredient,
@@ -310,7 +310,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                       ),
                       if (optionalIngredients.isNotEmpty) ...[
                         const SizedBox(height: 10),
-                        const _IngredientGroupTitle(title: 'Optional'),
+                        const _IngredientGroupTitle(title: 'Bumbu tambahan'),
                         ...optionalIngredients.map(
                           (ingredient) => _IngredientTile(
                             ingredient: ingredient,
@@ -326,7 +326,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                 ),
                 const SizedBox(height: 20),
                 const SectionTitle(
-                  title: 'Steps',
+                  title: 'Langkah Memasak',
                   subtitle:
                       'Ikuti urutan berikut agar proses memasak lebih rapi dan mudah.',
                   compact: true,
@@ -454,7 +454,7 @@ class _AiRecipeDetailView extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             SectionTitle(
-              title: 'Ingredients',
+              title: 'Bahan',
               subtitle: 'Bahan pilihan dan bumbu umum yang disarankan AI.',
               compact: true,
               trailing: Container(
@@ -491,7 +491,7 @@ class _AiRecipeDetailView extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             const SectionTitle(
-              title: 'Steps',
+              title: 'Langkah Memasak',
               subtitle: 'Ikuti urutan berikut dan sesuaikan rasa di akhir.',
               compact: true,
             ),
@@ -754,7 +754,7 @@ class _IngredientTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  ingredient.isRequired ? 'Required' : 'Optional',
+                  ingredient.isRequired ? 'Wajib' : 'Opsional',
                   style: Theme.of(
                     context,
                   ).textTheme.bodySmall?.copyWith(color: AppColors.textSoft),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../theme/app_colors.dart';
@@ -239,14 +240,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
 }
 
 String _registerErrorMessage(Object error) {
-  final message = error.toString().toLowerCase();
-  if (message.contains('already') || message.contains('registered')) {
+  final rawMessage = error is AuthException ? error.message : error.toString();
+  final message = rawMessage.toLowerCase();
+  if (message.contains('already') ||
+      message.contains('registered') ||
+      message.contains('user already exists')) {
     return 'Email sudah digunakan.';
+  }
+  if (message.contains('invalid email')) {
+    return 'Format email belum valid.';
   }
   if (message.contains('password')) {
     return 'Password belum memenuhi syarat.';
   }
-  if (message.contains('network') || message.contains('socket')) {
+  if (message.contains('too many') || message.contains('rate limit')) {
+    return 'Terlalu banyak percobaan daftar. Tunggu sebentar lalu coba lagi.';
+  }
+  if (message.contains('network') ||
+      message.contains('socket') ||
+      message.contains('failed host lookup') ||
+      message.contains('connection')) {
     return 'Koneksi internet bermasalah. Silakan coba lagi.';
   }
   return 'Register gagal. Silakan coba lagi.';

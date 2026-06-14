@@ -15,8 +15,22 @@ import 'favorites_screen.dart';
 import 'profile_screen.dart';
 import 'recommendation_screen.dart';
 
-class IngredientSelectionScreen extends StatelessWidget {
+class IngredientSelectionScreen extends StatefulWidget {
   const IngredientSelectionScreen({super.key});
+
+  @override
+  State<IngredientSelectionScreen> createState() =>
+      _IngredientSelectionScreenState();
+}
+
+class _IngredientSelectionScreenState extends State<IngredientSelectionScreen> {
+  final _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,10 +80,19 @@ class IngredientSelectionScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(18),
                       ),
                       child: TextField(
+                        controller: _searchController,
                         onChanged: provider.setSearchQuery,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           hintText: 'Cari bahan, misalnya telur, nasi, ayam...',
-                          prefixIcon: Icon(Icons.search_rounded),
+                          prefixIcon: const Icon(Icons.search_rounded),
+                          suffixIcon: provider.searchQuery.trim().isEmpty
+                              ? null
+                              : IconButton(
+                                  tooltip: 'Bersihkan pencarian',
+                                  onPressed: () =>
+                                      _resetIngredientFilters(provider),
+                                  icon: const Icon(Icons.close_rounded),
+                                ),
                         ),
                       ),
                     ),
@@ -163,10 +186,12 @@ class IngredientSelectionScreen extends StatelessWidget {
     }
 
     if (provider.filteredIngredients.isEmpty) {
-      return const EmptyState(
+      return EmptyState(
         icon: Icons.search_off_rounded,
         title: 'Bahan tidak ditemukan',
         message: 'Coba gunakan kata kunci lain atau ganti kategori bahan.',
+        actionLabel: 'Reset pencarian',
+        onAction: () => _resetIngredientFilters(provider),
       );
     }
 
@@ -213,6 +238,11 @@ class IngredientSelectionScreen extends StatelessWidget {
         MaterialPageRoute<void>(builder: (_) => const ProfileScreen()),
       );
     }
+  }
+
+  void _resetIngredientFilters(IngredientProvider provider) {
+    _searchController.clear();
+    provider.resetFilters();
   }
 }
 

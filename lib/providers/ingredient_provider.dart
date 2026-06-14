@@ -239,6 +239,12 @@ class IngredientProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void resetFilters() {
+    _searchQuery = '';
+    _selectedCategory = 'Semua';
+    notifyListeners();
+  }
+
   void clearSelectedIngredients() {
     _selectedIngredientIds.clear();
     notifyListeners();

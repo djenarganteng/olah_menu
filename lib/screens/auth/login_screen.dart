@@ -211,10 +211,16 @@ String _authErrorMessage(Object error) {
   if (message.contains('invalid login credentials')) {
     return 'Email atau password salah.';
   }
+  if (message.contains('too many') || message.contains('rate limit')) {
+    return 'Terlalu banyak percobaan login. Tunggu sebentar lalu coba lagi.';
+  }
   if (message.contains('email')) {
     return 'Login gagal. Periksa email kamu.';
   }
-  if (message.contains('network') || message.contains('socket')) {
+  if (message.contains('network') ||
+      message.contains('socket') ||
+      message.contains('failed host lookup') ||
+      message.contains('connection')) {
     return 'Koneksi internet bermasalah. Silakan coba lagi.';
   }
   return 'Login gagal. Silakan coba lagi.';

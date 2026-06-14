@@ -116,9 +116,22 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                           );
                         }
 
-                        final recipes = snapshot.data!
-                            .where((recipe) => favorites.contains(recipe.id))
+                        final favoriteOrder = favorites.toList().reversed;
+                        final recipeById = {
+                          for (final recipe in snapshot.data!)
+                            recipe.id: recipe,
+                        };
+                        final recipes = favoriteOrder
+                            .map((id) => recipeById[id])
+                            .whereType<Recipe>()
                             .toList();
+                        final visibleCount =
+                            (_selectedFilter == FavoriteFilter.ai
+                                ? 0
+                                : recipes.length) +
+                            (_selectedFilter == FavoriteFilter.database
+                                ? 0
+                                : aiFavorites.length);
                         final favoriteCards = <Widget>[
                           if (_selectedFilter != FavoriteFilter.ai)
                             ...recipes.map(
@@ -152,21 +165,44 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                         ];
 
                         if (favoriteCards.isEmpty) {
-                          return const EmptyState(
+                          return EmptyState(
                             icon: Icons.favorite_border_rounded,
                             title: 'Belum ada resep favorit',
                             message:
                                 'Simpan resep yang kamu suka agar mudah ditemukan lagi.',
+                            actionLabel: 'Cari Resep',
+                            onAction: () {
+                              Navigator.of(context).pushReplacement(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => const AllRecipesScreen(),
+                                ),
+                              );
+                            },
                           );
                         }
 
-                        return ListView.separated(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: favoriteCards.length,
-                          separatorBuilder: (_, _) =>
-                              const SizedBox(height: 12),
-                          itemBuilder: (context, index) => favoriteCards[index],
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '$visibleCount resep tersimpan',
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
+                                    color: AppColors.textSoft,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                            ),
+                            const SizedBox(height: 12),
+                            ListView.separated(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: favoriteCards.length,
+                              separatorBuilder: (_, _) =>
+                                  const SizedBox(height: 12),
+                              itemBuilder: (context, index) =>
+                                  favoriteCards[index],
+                            ),
+                          ],
                         );
                       },
                     );

@@ -65,10 +65,8 @@ class LocalFavoritesStore {
     if (existingIndex >= 0) {
       next.removeAt(existingIndex);
     } else {
-      next.add(recipe);
+      next.insert(0, recipe);
     }
-
-    next.sort((a, b) => a.title.compareTo(b.title));
     aiFavorites.value = next;
 
     final prefs = await SharedPreferences.getInstance();

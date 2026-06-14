@@ -26,6 +26,7 @@ class AllRecipesScreen extends StatefulWidget {
 
 class _AllRecipesScreenState extends State<AllRecipesScreen> {
   late Future<_RecipeCatalogData> _future;
+  final _searchController = TextEditingController();
   RecipeListFilter _selectedFilter = RecipeListFilter.all;
   String _query = '';
 
@@ -33,6 +34,12 @@ class _AllRecipesScreenState extends State<AllRecipesScreen> {
   void initState() {
     super.initState();
     _future = _loadData();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<_RecipeCatalogData> _loadData() async {
@@ -64,6 +71,10 @@ class _AllRecipesScreenState extends State<AllRecipesScreen> {
             child: FutureBuilder<_RecipeCatalogData>(
               future: _future,
               builder: (context, snapshot) {
+                final hasActiveFilter =
+                    _query.trim().isNotEmpty ||
+                    _selectedFilter != RecipeListFilter.all;
+
                 return ListView(
                   padding: const EdgeInsets.fromLTRB(16, 6, 16, 20),
                   children: [
@@ -77,11 +88,19 @@ class _AllRecipesScreenState extends State<AllRecipesScreen> {
                       child: Column(
                         children: [
                           TextField(
+                            controller: _searchController,
                             onChanged: (value) =>
                                 setState(() => _query = value),
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               hintText: 'Cari resep...',
-                              prefixIcon: Icon(Icons.search_rounded),
+                              prefixIcon: const Icon(Icons.search_rounded),
+                              suffixIcon: _query.trim().isEmpty
+                                  ? null
+                                  : IconButton(
+                                      tooltip: 'Bersihkan pencarian',
+                                      onPressed: _resetSearchAndFilter,
+                                      icon: const Icon(Icons.close_rounded),
+                                    ),
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -103,6 +122,20 @@ class _AllRecipesScreenState extends State<AllRecipesScreen> {
                               }).toList(),
                             ),
                           ),
+                          if (hasActiveFilter) ...[
+                            const SizedBox(height: 10),
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: TextButton.icon(
+                                onPressed: _resetSearchAndFilter,
+                                icon: const Icon(
+                                  Icons.restart_alt_rounded,
+                                  size: 18,
+                                ),
+                                label: const Text('Reset pencarian dan filter'),
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -148,10 +181,12 @@ class _AllRecipesScreenState extends State<AllRecipesScreen> {
     final recipes = _filterRecipes(data.recipes, data.ingredientsMap);
 
     if (recipes.isEmpty) {
-      return const EmptyState(
+      return EmptyState(
         icon: Icons.menu_book_outlined,
         title: 'Resep tidak ditemukan',
         message: 'Coba ubah kata kunci pencarian atau pilih filter lain.',
+        actionLabel: 'Reset pencarian',
+        onAction: _resetSearchAndFilter,
       );
     }
 
@@ -241,6 +276,14 @@ class _AllRecipesScreenState extends State<AllRecipesScreen> {
       case RecipeListFilter.fewerIngredients:
         return 'Bahan Sedikit';
     }
+  }
+
+  void _resetSearchAndFilter() {
+    _searchController.clear();
+    setState(() {
+      _query = '';
+      _selectedFilter = RecipeListFilter.all;
+    });
   }
 
   void _handleNavigation(BuildContext context, int index) {

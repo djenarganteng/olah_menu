@@ -91,7 +91,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'Pilih bahan di rumah, lalu temukan resep yang cocok tanpa bingung. OlahMenu membantu kamu menyusun menu dari bahan yang sudah ada.',
+                        'Pilih stok dapurmu, lalu temukan resep yang paling cocok tanpa bingung.',
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           color: AppColors.textSoft,
                           height: 1.55,
