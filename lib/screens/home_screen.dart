@@ -6,6 +6,7 @@ import '../widgets/app_header.dart';
 import 'all_recipes_screen.dart';
 import 'favorites_screen.dart';
 import 'ingredient_selection_screen.dart';
+import 'profile_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -207,6 +208,13 @@ class HomeScreen extends StatelessWidget {
       Navigator.of(
         context,
       ).push(MaterialPageRoute<void>(builder: (_) => const FavoritesScreen()));
+      return;
+    }
+
+    if (index == 4) {
+      Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const ProfileScreen()));
     }
   }
 }

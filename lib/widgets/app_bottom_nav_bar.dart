@@ -19,6 +19,7 @@ class AppBottomNavBar extends StatelessWidget {
       (Icons.shopping_bag_rounded, 'Bahan'),
       (Icons.menu_book_rounded, 'Resep'),
       (Icons.favorite_rounded, 'Favorit'),
+      (Icons.person_rounded, 'Profil'),
     ];
 
     return SafeArea(

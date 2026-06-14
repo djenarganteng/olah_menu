@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'providers/ai_recipe_provider.dart';
+import 'providers/auth_provider.dart';
 import 'providers/ingredient_provider.dart';
 import 'providers/recommendation_provider.dart';
 import 'providers/recipe_detail_provider.dart';
+import 'screens/auth/auth_gate.dart';
 import 'screens/home_screen.dart';
-import 'screens/splash_screen.dart';
+import 'screens/profile_screen.dart';
 import 'services/ai_recipe_service.dart';
+import 'services/auth_service.dart';
 import 'services/recommendation_service.dart';
 import 'services/supabase_service.dart';
 import 'theme/app_colors.dart';
@@ -36,12 +39,17 @@ class OlahMenuApp extends StatelessWidget {
       supabaseService: supabaseService,
     );
     final aiRecipeService = AiRecipeService();
+    final authService = AuthService();
 
     return MultiProvider(
       providers: [
         Provider<SupabaseService>.value(value: supabaseService),
         Provider<RecommendationService>.value(value: recommendationService),
         Provider<AiRecipeService>.value(value: aiRecipeService),
+        Provider<AuthService>.value(value: authService),
+        ChangeNotifierProvider(
+          create: (_) => AuthProvider(authService: authService),
+        ),
         ChangeNotifierProvider(
           create: (_) =>
               IngredientProvider(supabaseService: supabaseService)
@@ -63,8 +71,11 @@ class OlahMenuApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: 'OlahMenu',
         theme: theme,
-        home: const SplashScreen(),
-        routes: {HomeScreen.routeName: (_) => const HomeScreen()},
+        home: const AuthGate(),
+        routes: {
+          HomeScreen.routeName: (_) => const HomeScreen(),
+          ProfileScreen.routeName: (_) => const ProfileScreen(),
+        },
       ),
     );
   }

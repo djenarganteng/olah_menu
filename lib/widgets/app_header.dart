@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../providers/auth_provider.dart';
 import '../theme/app_colors.dart';
 
 class AppHeader extends StatelessWidget implements PreferredSizeWidget {
@@ -74,6 +76,27 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
 
 class HeaderAvatar extends StatelessWidget {
   const HeaderAvatar({super.key, this.imageUrl});
+
+  final String? imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final resolvedImageUrl = imageUrl ??
+        context.watch<AuthProvider>().user?.userMetadata?['avatar_url']
+            ?.toString();
+
+    return InkWell(
+      onTap: () {
+        Navigator.of(context).pushNamed('/profile');
+      },
+      borderRadius: BorderRadius.circular(999),
+      child: _AvatarCircle(imageUrl: resolvedImageUrl),
+    );
+  }
+}
+
+class _AvatarCircle extends StatelessWidget {
+  const _AvatarCircle({this.imageUrl});
 
   final String? imageUrl;
 

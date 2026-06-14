@@ -16,6 +16,7 @@ import '../widgets/recipe_card.dart';
 import 'all_recipes_screen.dart';
 import 'favorites_screen.dart';
 import 'ingredient_selection_screen.dart';
+import 'profile_screen.dart';
 import 'recipe_detail_screen.dart';
 
 enum RecommendationFilter { bestMatch, quick, missingFew, easy }
@@ -58,23 +59,20 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
       body: SafeArea(
         child: Consumer<RecommendationProvider>(
           builder: (context, provider, _) {
-            return Padding(
+            return ListView(
               padding: const EdgeInsets.fromLTRB(16, 6, 16, 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _TopBar(
-                    selectedCount: widget.selectedIngredients.length,
-                    onFilterTap: () => _showFilterSheet(context),
-                  ),
-                  const SizedBox(height: 12),
-                  _SelectedIngredientSummary(
-                    ingredients: widget.selectedIngredients,
-                  ),
-                  const SizedBox(height: 14),
-                  Expanded(child: _buildContent(context, provider)),
-                ],
-              ),
+              children: [
+                _TopBar(
+                  selectedCount: widget.selectedIngredients.length,
+                  onFilterTap: () => _showFilterSheet(context),
+                ),
+                const SizedBox(height: 12),
+                _SelectedIngredientSummary(
+                  ingredients: widget.selectedIngredients,
+                ),
+                const SizedBox(height: 14),
+                _buildContent(context, provider),
+              ],
             );
           },
         ),
@@ -107,7 +105,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
       return Consumer<AiRecipeProvider>(
         builder: (context, aiProvider, _) {
           if (aiProvider.state == AiRecipeState.loading) {
-            return const SingleChildScrollView(
+            return const Padding(
               padding: EdgeInsets.only(bottom: 8),
               child: AiRecipeSkeleton(),
             );
@@ -115,20 +113,16 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
 
           if (aiProvider.state == AiRecipeState.success &&
               aiProvider.recipe != null) {
-            return ListView(
-              children: [
-                AiRecipeCard(
-                  recipe: aiProvider.recipe!,
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) =>
-                            RecipeDetailScreen.ai(recipe: aiProvider.recipe!),
-                      ),
-                    );
-                  },
-                ),
-              ],
+            return AiRecipeCard(
+              recipe: aiProvider.recipe!,
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) =>
+                        RecipeDetailScreen.ai(recipe: aiProvider.recipe!),
+                  ),
+                );
+              },
             );
           }
 
@@ -146,8 +140,11 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
 
     final sortedRecommendations = _applyFilter(provider.recommendations);
 
-    return ListView.builder(
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       itemCount: sortedRecommendations.length,
+      separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final recommendation = sortedRecommendations[index];
         return RecipeCard(
@@ -333,6 +330,13 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     if (index == 3) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute<void>(builder: (_) => const FavoritesScreen()),
+      );
+      return;
+    }
+
+    if (index == 4) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(builder: (_) => const ProfileScreen()),
       );
       return;
     }

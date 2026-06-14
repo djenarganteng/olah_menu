@@ -209,7 +209,7 @@ class _SelectionDot extends StatelessWidget {
       height: 20,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: isSelected ? primary : Colors.white.withValues(alpha: 0.9),
+        color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.9),
         border: Border.all(
           color: isSelected ? primary : const Color(0xFFB0C4A7),
           width: 1.4,
@@ -223,7 +223,7 @@ class _SelectionDot extends StatelessWidget {
         ],
       ),
       child: isSelected
-          ? const Icon(Icons.check_rounded, size: 13, color: Colors.white)
+          ? Icon(Icons.check_rounded, size: 13, color: primary)
           : null,
     );
   }

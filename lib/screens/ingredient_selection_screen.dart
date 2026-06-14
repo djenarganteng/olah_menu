@@ -12,6 +12,7 @@ import '../widgets/ingredient_chip.dart';
 import '../widgets/loading_state.dart';
 import 'all_recipes_screen.dart';
 import 'favorites_screen.dart';
+import 'profile_screen.dart';
 import 'recommendation_screen.dart';
 
 class IngredientSelectionScreen extends StatelessWidget {
@@ -32,111 +33,100 @@ class IngredientSelectionScreen extends StatelessWidget {
           SafeArea(
             child: Consumer<IngredientProvider>(
               builder: (context, provider, _) {
-                return Column(
+                return ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 6, 16, 154),
                   children: [
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Masak dari bahan yang ada',
-                              style: Theme.of(context).textTheme.headlineSmall
-                                  ?.copyWith(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: -0.6,
-                                  ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Pilih bahan yang tersedia di rumahmu, lalu temukan resep yang cocok tanpa ribet.',
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(
-                                    color: AppColors.textSoft,
-                                    height: 1.5,
-                                  ),
-                            ),
-                            const SizedBox(height: 14),
-                            Container(
-                              decoration: BoxDecoration(
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: Color(0x0D000000),
-                                    blurRadius: 16,
-                                    offset: Offset(0, 6),
-                                  ),
-                                ],
-                                borderRadius: BorderRadius.circular(18),
-                              ),
-                              child: TextField(
-                                onChanged: provider.setSearchQuery,
-                                decoration: const InputDecoration(
-                                  hintText:
-                                      'Cari bahan, misalnya telur, nasi, ayam...',
-                                  prefixIcon: Icon(Icons.search_rounded),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 14),
-                            SizedBox(
-                              height: 40,
-                              child: ListView.separated(
-                                scrollDirection: Axis.horizontal,
-                                itemCount: provider.categories.length,
-                                separatorBuilder: (_, _) =>
-                                    const SizedBox(width: 10),
-                                itemBuilder: (context, index) {
-                                  final category = provider.categories[index];
-                                  return ChoiceChip(
-                                    label: Text(category),
-                                    selected:
-                                        provider.selectedCategory == category,
-                                    onSelected: (_) =>
-                                        provider.setCategory(category),
-                                  );
-                                },
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: TextButton.icon(
-                                onPressed: () {
-                                  final defaultNames = {
-                                    'Garam',
-                                    'Minyak Goreng',
-                                    'Bawang Merah',
-                                    'Bawang Putih',
-                                    'Kecap',
-                                  };
-                                  for (final ingredient
-                                      in provider.ingredients) {
-                                    if (defaultNames.contains(
-                                          ingredient.name,
-                                        ) &&
-                                        !provider.isSelected(ingredient.id)) {
-                                      provider.toggleSelection(ingredient);
-                                    }
-                                  }
-                                },
-                                icon: const Icon(
-                                  Icons.auto_awesome_rounded,
-                                  size: 18,
-                                ),
-                                label: const Text('Pilih bumbu dasar'),
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Expanded(child: _buildContent(context, provider)),
-                          ],
+                    Text(
+                      'Masak dari bahan yang ada',
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.6,
+                          ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Pilih bahan yang tersedia di rumahmu, lalu temukan resep yang cocok tanpa ribet.',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textSoft,
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Container(
+                      decoration: BoxDecoration(
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x0D000000),
+                            blurRadius: 16,
+                            offset: Offset(0, 6),
+                          ),
+                        ],
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: TextField(
+                        onChanged: provider.setSearchQuery,
+                        decoration: const InputDecoration(
+                          hintText: 'Cari bahan, misalnya telur, nasi, ayam...',
+                          prefixIcon: Icon(Icons.search_rounded),
                         ),
                       ),
                     ),
-                    _BottomSelectionBar(provider: provider),
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      height: 40,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: provider.categories.length,
+                        separatorBuilder: (_, _) => const SizedBox(width: 10),
+                        itemBuilder: (context, index) {
+                          final category = provider.categories[index];
+                          return ChoiceChip(
+                            label: Text(category),
+                            selected: provider.selectedCategory == category,
+                            onSelected: (_) => provider.setCategory(category),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        onPressed: () {
+                          final defaultNames = {
+                            'Garam',
+                            'Minyak Goreng',
+                            'Bawang Merah',
+                            'Bawang Putih',
+                            'Kecap',
+                          };
+                          for (final ingredient in provider.ingredients) {
+                            if (defaultNames.contains(ingredient.name) &&
+                                !provider.isSelected(ingredient.id)) {
+                              provider.toggleSelection(ingredient);
+                            }
+                          }
+                        },
+                        icon: const Icon(Icons.auto_awesome_rounded, size: 18),
+                        label: const Text('Pilih bumbu dasar'),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    _buildContent(context, provider),
                   ],
                 );
+              },
+            ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Consumer<IngredientProvider>(
+              builder: (context, provider, _) {
+                return _BottomSelectionBar(provider: provider);
               },
             ),
           ),
@@ -185,6 +175,8 @@ class IngredientSelectionScreen extends StatelessWidget {
       mainAxisSpacing: 12,
       crossAxisSpacing: 12,
       itemCount: provider.filteredIngredients.length,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       itemBuilder: (context, index) {
         final ingredient = provider.filteredIngredients[index];
         return IngredientChip(
@@ -212,6 +204,13 @@ class IngredientSelectionScreen extends StatelessWidget {
     if (index == 3) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute<void>(builder: (_) => const FavoritesScreen()),
+      );
+      return;
+    }
+
+    if (index == 4) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(builder: (_) => const ProfileScreen()),
       );
     }
   }
