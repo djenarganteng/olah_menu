@@ -12,6 +12,7 @@ class AuthProvider extends ChangeNotifier {
     _restoreSession();
     _subscription = authService.authStateChanges.listen((state) {
       _user = state.session?.user;
+      _isPasswordRecovery = state.event == AuthChangeEvent.passwordRecovery;
       _status = _user == null
           ? AuthStatus.unauthenticated
           : AuthStatus.authenticated;
@@ -23,11 +24,13 @@ class AuthProvider extends ChangeNotifier {
 
   AuthStatus _status = AuthStatus.loading;
   User? _user;
+  bool _isPasswordRecovery = false;
   StreamSubscription<AuthState>? _subscription;
 
   AuthStatus get status => _status;
   User? get user => _user;
   bool get isAuthenticated => _status == AuthStatus.authenticated;
+  bool get isPasswordRecovery => _isPasswordRecovery;
 
   Future<AuthResponse> register({
     required String fullName,
@@ -43,6 +46,10 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> login({required String email, required String password}) async {
     await authService.signIn(email: email, password: password);
+  }
+
+  Future<void> sendPasswordResetEmail(String email) async {
+    await authService.sendPasswordResetEmail(email);
   }
 
   Future<void> logout() async {
@@ -83,6 +90,16 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> updatePassword(String password) async {
     await authService.updatePassword(password);
+  }
+
+  Future<void> completePasswordReset(String password) async {
+    await authService.updatePassword(password);
+    _isPasswordRecovery = false;
+    _user = authService.getCurrentUser();
+    _status = _user == null
+        ? AuthStatus.unauthenticated
+        : AuthStatus.authenticated;
+    notifyListeners();
   }
 
   Future<void> changePassword({

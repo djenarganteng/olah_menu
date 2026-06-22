@@ -25,7 +25,9 @@ Future<void> main() async {
     initializationError = error.toString();
   }
 
-  await LocalFavoritesStore.init();
+  await LocalFavoritesStore.init(
+    enableAccountSync: initializationError == null,
+  );
 
   runApp(OlahMenuApp(initializationError: initializationError));
 }

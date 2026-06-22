@@ -38,6 +38,13 @@ class AuthService {
     return _supabase.auth.signInWithPassword(email: email, password: password);
   }
 
+  Future<void> sendPasswordResetEmail(String email) {
+    return _supabase.auth.resetPasswordForEmail(
+      email,
+      redirectTo: 'olahmenu://reset-password',
+    );
+  }
+
   Future<void> signOut() {
     return _supabase.auth.signOut();
   }

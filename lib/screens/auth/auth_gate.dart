@@ -5,13 +5,19 @@ import '../../providers/auth_provider.dart';
 import '../../theme/app_colors.dart';
 import '../home_screen.dart';
 import 'login_screen.dart';
+import 'reset_password_screen.dart';
 
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final status = context.watch<AuthProvider>().status;
+    final authProvider = context.watch<AuthProvider>();
+    final status = authProvider.status;
+
+    if (authProvider.isPasswordRecovery) {
+      return const ResetPasswordScreen();
+    }
 
     switch (status) {
       case AuthStatus.loading:

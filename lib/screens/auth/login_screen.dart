@@ -18,6 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _isSendingReset = false;
   bool _obscurePassword = true;
 
   @override
@@ -104,6 +105,17 @@ class _LoginScreenState extends State<LoginScreen> {
                             : null,
                         onFieldSubmitted: (_) => _submit(),
                       ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: _isLoading || _isSendingReset
+                              ? null
+                              : _showPasswordResetDialog,
+                          child: _isSendingReset
+                              ? const Text('Mengirim...')
+                              : const Text('Lupa password?'),
+                        ),
+                      ),
                       const SizedBox(height: 20),
                       SizedBox(
                         width: double.infinity,
@@ -172,6 +184,48 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Future<void> _showPasswordResetDialog() async {
+    final email = await showDialog<String>(
+      context: context,
+      builder: (context) => _PasswordResetDialog(
+        initialEmail: _emailController.text.trim(),
+        validateEmail: _validateEmail,
+      ),
+    );
+
+    if (email == null || !mounted) {
+      return;
+    }
+
+    await _sendPasswordReset(email);
+  }
+
+  Future<void> _sendPasswordReset(String email) async {
+    setState(() => _isSendingReset = true);
+    try {
+      await context.read<AuthProvider>().sendPasswordResetEmail(email);
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Link reset password sudah dikirim ke email kamu.'),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_passwordResetErrorMessage(error))),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSendingReset = false);
+      }
+    }
+  }
+
   String? _validateEmail(String? value) {
     final email = value?.trim() ?? '';
     if (email.isEmpty) {
@@ -201,6 +255,71 @@ class _AuthIcon extends StatelessWidget {
   }
 }
 
+class _PasswordResetDialog extends StatefulWidget {
+  const _PasswordResetDialog({
+    required this.initialEmail,
+    required this.validateEmail,
+  });
+
+  final String initialEmail;
+  final String? Function(String?) validateEmail;
+
+  @override
+  State<_PasswordResetDialog> createState() => _PasswordResetDialogState();
+}
+
+class _PasswordResetDialogState extends State<_PasswordResetDialog> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _emailController;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController = TextEditingController(text: widget.initialEmail);
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Reset Password'),
+      content: Form(
+        key: _formKey,
+        child: TextFormField(
+          controller: _emailController,
+          autofocus: _emailController.text.trim().isEmpty,
+          keyboardType: TextInputType.emailAddress,
+          textInputAction: TextInputAction.done,
+          decoration: const InputDecoration(
+            labelText: 'Email akun',
+            prefixIcon: Icon(Icons.mail_outline_rounded),
+          ),
+          validator: widget.validateEmail,
+          onFieldSubmitted: (_) => _submit(),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Batal'),
+        ),
+        FilledButton(onPressed: _submit, child: const Text('Kirim Link')),
+      ],
+    );
+  }
+
+  void _submit() {
+    if (_formKey.currentState!.validate()) {
+      Navigator.of(context).pop(_emailController.text.trim());
+    }
+  }
+}
+
 String _authErrorMessage(Object error) {
   final rawMessage = error is AuthException ? error.message : error.toString();
   final message = rawMessage.toLowerCase();
@@ -224,4 +343,22 @@ String _authErrorMessage(Object error) {
     return 'Koneksi internet bermasalah. Silakan coba lagi.';
   }
   return 'Login gagal. Silakan coba lagi.';
+}
+
+String _passwordResetErrorMessage(Object error) {
+  final rawMessage = error is AuthException ? error.message : error.toString();
+  final message = rawMessage.toLowerCase();
+  if (message.contains('rate limit') || message.contains('too many')) {
+    return 'Terlalu banyak permintaan reset. Tunggu sebentar lalu coba lagi.';
+  }
+  if (message.contains('invalid email') || message.contains('email')) {
+    return 'Reset gagal. Periksa email kamu.';
+  }
+  if (message.contains('network') ||
+      message.contains('socket') ||
+      message.contains('failed host lookup') ||
+      message.contains('connection')) {
+    return 'Koneksi internet bermasalah. Silakan coba lagi.';
+  }
+  return 'Gagal mengirim link reset password. Silakan coba lagi.';
 }
