@@ -719,7 +719,7 @@ IngredientArtKind ingredientArtKindForName(String name, String category) {
   if (value.contains('bumbu') || value.contains('pantry')) {
     return IngredientArtKind.basket;
   }
-  if (value.contains('cabai')) {
+  if (value.contains('cabai') || value.contains('cabal') || value.contains('caba')) {
     return IngredientArtKind.chili;
   }
   if (value.contains('kol') || value.contains('brokoli')) {
@@ -739,7 +739,10 @@ IngredientArtKind ingredientArtKindForName(String name, String category) {
   }
   if (value.contains('daun bawang') ||
       value.contains('bayam') ||
-      value.contains('sawi')) {
+      value.contains('sawi') ||
+      value.contains('sawl') ||
+      value.contains('pokcoy') ||
+      value.contains('pakcoy')) {
     return IngredientArtKind.leafy;
   }
   if (value.contains('beras')) {

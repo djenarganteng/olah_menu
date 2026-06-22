@@ -1,13 +1,13 @@
 update public.ingredients
-set image_url = 'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/sign/fadliking203@gmail.com's%20Org/wortel.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8yYTY3MGRkYS1mZWRjLTQ5YzktYTM3ZS1hMjk5YWU0MjFhNDYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJmYWRsaWtpbmcyMDNAZ21haWwuY29tJ3MgT3JnL3dvcnRlbC5wbmciLCJzY29wZSI6ImRvd25sb2FkIiwiaWF0IjoxNzgxMTgyNTM3LCJleHAiOjE4MTI3MTg1Mzd9.cOG0Dc3b0Udt-SalMp5rxs9U0gIXmZfQ4F9EECCHgPE'
+set image_url = 'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/wortel.jpg'
 where name = 'Wortel';
 
 update public.ingredients
-set image_url = 'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/sign/fadliking203@gmail.com's%20Org/tempe.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8yYTY3MGRkYS1mZWRjLTQ5YzktYTM3ZS1hMjk5YWU0MjFhNDYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJmYWRsaWtpbmcyMDNAZ21haWwuY29tJ3MgT3JnL3RlbXBlLnBuZyIsInNjb3BlIjoiZG93bmxvYWQiLCJpYXQiOjE3ODExODI0OTUsImV4cCI6MTgxMjcxODQ5NX0.iPPZHwv-CZO4ez_dd5vOdXGq82rlv7AQVbtXcOTmqMQ'
+set image_url = 'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/tempe.jpg'
 where name = 'Tempe';
 
 update public.ingredients
-set image_url = 'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/sign/fadliking203@gmail.com's%20Org/telur.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8yYTY3MGRkYS1mZWRjLTQ5YzktYTM3ZS1hMjk5YWU0MjFhNDYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJmYWRsaWtpbmcyMDNAZ21haWwuY29tJ3MgT3JnL3RlbHVyLnBuZyIsInNjb3BlIjoiZG93bmxvYWQiLCJpYXQiOjE3ODExODIzNTYsImV4cCI6MTgxMjcxODM1Nn0.cKgJhvX8JjRXuE2bJTKI798VCylBDLjoijwE_CnV_Xs'
+set image_url = 'https://nvbaxhlexcfaahmzeauq.supabase.co/storage/v1/object/public/ingredient-images/ingredients/telur.jpg'
 where name = 'Telur';
 
 update public.ingredients

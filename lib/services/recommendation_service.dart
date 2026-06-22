@@ -12,6 +12,9 @@ class RecommendationService {
     List<Ingredient> selectedIngredients,
   ) async {
     final selectedIngredientIds = selectedIngredients.map((e) => e.id).toSet();
+    final selectedIngredientNames = selectedIngredients
+        .map((e) => e.name.toLowerCase().replaceAll('pakcoy', 'pokcoy'))
+        .toSet();
 
     final recipes = await supabaseService.getRecipes();
     final allRecipeIngredients = await supabaseService
@@ -37,11 +40,17 @@ class RecommendationService {
           .where((item) => !item.isRequired)
           .toList();
 
+      bool isMatched(RecipeIngredient item) {
+        final itemName = item.ingredientName?.toLowerCase().replaceAll('pakcoy', 'pokcoy');
+        return selectedIngredientIds.contains(item.ingredientId) ||
+               (itemName != null && selectedIngredientNames.contains(itemName));
+      }
+
       final matchedRequired = requiredIngredients
-          .where((item) => selectedIngredientIds.contains(item.ingredientId))
+          .where((item) => isMatched(item))
           .toList();
       final matchedOptional = optionalIngredients
-          .where((item) => selectedIngredientIds.contains(item.ingredientId))
+          .where((item) => isMatched(item))
           .toList();
 
       final requiredTotalCount = requiredIngredients.length;
@@ -65,10 +74,10 @@ class RecommendationService {
 
       final matchedIngredients = [...matchedRequired, ...matchedOptional];
       final missingRequired = requiredIngredients
-          .where((item) => !selectedIngredientIds.contains(item.ingredientId))
+          .where((item) => !isMatched(item))
           .toList();
       final missingOptional = optionalIngredients
-          .where((item) => !selectedIngredientIds.contains(item.ingredientId))
+          .where((item) => !isMatched(item))
           .toList();
       final missingIngredients = [...missingRequired, ...missingOptional];
 

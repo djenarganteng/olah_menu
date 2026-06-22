@@ -10,6 +10,7 @@ import '../theme/app_colors.dart';
 import '../widgets/app_header.dart';
 import '../widgets/cooking_step_item.dart';
 import '../widgets/empty_state.dart';
+import '../widgets/ingredient_art_icon.dart';
 import '../widgets/loading_state.dart';
 import '../widgets/local_favorites_store.dart';
 import '../widgets/recipe_visual.dart';
@@ -67,6 +68,10 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
             .selectedIngredients
             .map((item) => item.id)
             .toSet();
+    final ingredientImagesById = {
+      for (final item in context.watch<IngredientProvider>().ingredients)
+        item.id: item.imageUrl?.trim() ?? '',
+    };
 
     return Scaffold(
       appBar: AppHeader(
@@ -306,6 +311,14 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                           isOwned: selectedIngredientIds.contains(
                             ingredient.ingredientId,
                           ),
+                          imageUrl:
+                              ingredient.ingredientImageUrl
+                                      ?.trim()
+                                      .isNotEmpty ==
+                                  true
+                              ? ingredient.ingredientImageUrl!.trim()
+                              : ingredientImagesById[ingredient.ingredientId] ??
+                                    '',
                         ),
                       ),
                       if (optionalIngredients.isNotEmpty) ...[
@@ -318,6 +331,15 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                             isOwned: selectedIngredientIds.contains(
                               ingredient.ingredientId,
                             ),
+                            imageUrl:
+                                ingredient.ingredientImageUrl
+                                        ?.trim()
+                                        .isNotEmpty ==
+                                    true
+                                ? ingredient.ingredientImageUrl!.trim()
+                                : ingredientImagesById[ingredient
+                                          .ingredientId] ??
+                                      '',
                           ),
                         ),
                       ],
@@ -704,14 +726,21 @@ class _IngredientTile extends StatelessWidget {
     required this.ingredient,
     required this.adjustedAmount,
     required this.isOwned,
+    required this.imageUrl,
   });
 
   final RecipeIngredient ingredient;
   final double adjustedAmount;
   final bool isOwned;
+  final String imageUrl;
 
   @override
   Widget build(BuildContext context) {
+    final artKind = ingredientArtKindForName(
+      ingredient.ingredientName ?? '',
+      ingredient.ingredientCategory ?? '',
+    );
+
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
@@ -728,16 +757,26 @@ class _IngredientTile extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: isOwned ? Colors.white : Colors.white,
+              color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: isOwned ? AppColors.primary : Colors.transparent,
-              ),
+              border: Border.all(color: AppColors.border),
             ),
-            child: Icon(
-              isOwned ? Icons.check_rounded : Icons.kitchen_rounded,
-              color: isOwned ? AppColors.primary : AppColors.textSoft,
-              size: 18,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: imageUrl.isNotEmpty
+                  ? Image.network(
+                      imageUrl,
+                      fit: BoxFit.contain,
+                      alignment: Alignment.center,
+                      filterQuality: FilterQuality.high,
+                      errorBuilder: (context, error, stackTrace) {
+                        return _IngredientFallbackIcon(
+                          artKind: artKind,
+                          isOwned: isOwned,
+                        );
+                      },
+                    )
+                  : _IngredientFallbackIcon(artKind: artKind, isOwned: isOwned),
             ),
           ),
           const SizedBox(width: 12),
@@ -771,6 +810,26 @@ class _IngredientTile extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _IngredientFallbackIcon extends StatelessWidget {
+  const _IngredientFallbackIcon({required this.artKind, required this.isOwned});
+
+  final IngredientArtKind artKind;
+  final bool isOwned;
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: isOwned ? AppColors.primarySoft : AppColors.backgroundSoft,
+      child: IngredientArtIcon(
+        kind: artKind,
+        color: isOwned ? AppColors.primaryDark : AppColors.textSoft,
+        size: 36,
+        strokeWidth: 1.8,
       ),
     );
   }

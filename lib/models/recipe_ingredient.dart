@@ -8,6 +8,7 @@ class RecipeIngredient {
     required this.isRequired,
     this.ingredientName,
     this.ingredientCategory,
+    this.ingredientImageUrl,
     this.createdAt,
   });
 
@@ -19,6 +20,7 @@ class RecipeIngredient {
   final bool isRequired;
   final String? ingredientName;
   final String? ingredientCategory;
+  final String? ingredientImageUrl;
   final DateTime? createdAt;
 
   factory RecipeIngredient.fromMap(Map<String, dynamic> map) {
@@ -33,6 +35,7 @@ class RecipeIngredient {
       isRequired: map['is_required'] as bool? ?? true,
       ingredientName: ingredientMap?['name'] as String?,
       ingredientCategory: ingredientMap?['category'] as String?,
+      ingredientImageUrl: ingredientMap?['image_url'] as String?,
       createdAt: map['created_at'] == null
           ? null
           : DateTime.tryParse(map['created_at'] as String),
@@ -48,7 +51,11 @@ class RecipeIngredient {
       'unit': unit,
       'is_required': isRequired,
       'created_at': createdAt?.toIso8601String(),
-      'ingredients': {'name': ingredientName, 'category': ingredientCategory},
+      'ingredients': {
+        'name': ingredientName,
+        'category': ingredientCategory,
+        'image_url': ingredientImageUrl,
+      },
     };
   }
 }
