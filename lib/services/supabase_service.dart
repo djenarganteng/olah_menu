@@ -45,7 +45,7 @@ class SupabaseService {
                 .from('recipe_ingredients')
                 .select(
                   'id, recipe_id, ingredient_id, amount, unit, is_required, '
-                  'created_at, ingredients(name, category)',
+                  'created_at, ingredients(name, category, image_url)',
                 )
                 .eq('recipe_id', recipeId)
                 .order('is_required', ascending: false)
@@ -77,7 +77,7 @@ class SupabaseService {
                 .from('recipe_ingredients')
                 .select(
                   'id, recipe_id, ingredient_id, amount, unit, is_required, '
-                  'created_at, ingredients(name, category)',
+                  'created_at, ingredients(name, category, image_url)',
                 )
                 .order('recipe_id')
                 .order('is_required', ascending: false)

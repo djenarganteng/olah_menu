@@ -209,7 +209,24 @@ class IngredientProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _ingredients = await supabaseService.getIngredients();
+      final fetched = await supabaseService.getIngredients();
+      
+      final Map<String, Ingredient> uniqueMap = {};
+      for (final item in fetched) {
+        final key = item.name.toLowerCase().replaceAll('pakcoy', 'pokcoy');
+        if (!uniqueMap.containsKey(key)) {
+          uniqueMap[key] = item;
+        } else {
+          // If we already have this ingredient, prefer the one that has an image
+          if (uniqueMap[key]!.imageUrl == null && item.imageUrl != null) {
+            uniqueMap[key] = item;
+          }
+        }
+      }
+      
+      _ingredients = uniqueMap.values.toList();
+      // Re-sort just in case
+      _ingredients.sort((a, b) => a.name.compareTo(b.name));
     } catch (error) {
       debugPrint('Failed to load ingredients from Supabase: $error');
       _ingredients = List<Ingredient>.of(_fallbackIngredients);
