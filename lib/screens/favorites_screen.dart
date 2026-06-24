@@ -39,15 +39,33 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF9FBF8),
+      extendBodyBehindAppBar: true,
       appBar: const AppHeader(title: 'Favorit'),
       bottomNavigationBar: AppBottomNavBar(
         currentIndex: 3,
         onSelected: (index) => _handleNavigation(context, index),
       ),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
-          children: [
+      body: Stack(
+        children: [
+          // Background: leaf & blob watercolor illustration
+          const Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Color(0xFFF9FBF8), // Soft off-white base color
+                image: DecorationImage(
+                  image: AssetImage('assets/backgrounds/favorites_bg.png'),
+                  fit: BoxFit.cover,
+                  opacity: 0.15, // Faded for maximum contrast of text and cards
+                ),
+              ),
+            ),
+          ),
+          SafeArea(
+            top: false,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 103, 16, 20),
+              children: [
             Text(
               'Resep yang kamu simpan',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -141,8 +159,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                                 onTap: () {
                                   Navigator.of(context).push(
                                     MaterialPageRoute<void>(
-                                      builder: (_) =>
-                                          RecipeDetailScreen(recipe: recipe),
+                                      builder: (_) => RecipeDetailScreen(
+                                        recipe: recipe,
+                                        heroTag: 'recipe-image-${recipe.id}',
+                                      ),
                                     ),
                                   );
                                 },
@@ -196,6 +216,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                             ListView.separated(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
+                              padding: EdgeInsets.zero,
                               itemCount: favoriteCards.length,
                               separatorBuilder: (_, _) =>
                                   const SizedBox(height: 12),
@@ -213,8 +234,11 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           ],
         ),
       ),
+        ],
+      ),
     );
   }
+
 
   void _handleNavigation(BuildContext context, int index) {
     if (index == 0) {

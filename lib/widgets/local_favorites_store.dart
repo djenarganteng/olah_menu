@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -7,43 +8,40 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/ai_recipe.dart';
 
 class LocalFavoritesStore {
-  static const _storageKey = 'favorite_recipe_ids';
-  static const _aiStorageKey = 'favorite_ai_recipes';
+  static const _legacyStorageKey = 'favorite_recipe_ids';
+  static const _legacyAiStorageKey = 'favorite_ai_recipes';
+  static const _storageKeyPrefix = 'favorite_recipe_ids_';
+  static const _aiStorageKeyPrefix = 'favorite_ai_recipes_';
   static final ValueNotifier<Set<int>> favorites = ValueNotifier(<int>{});
   static final ValueNotifier<List<AiRecipe>> aiFavorites = ValueNotifier(
     <AiRecipe>[],
   );
   static bool _isInitialized = false;
   static bool _syncEnabled = false;
-  static bool _isSyncing = false;
+  static String? _activeUserId;
+  static String? _legacyMigrationUserId;
+  static final Set<String> _syncingUserIds = <String>{};
 
   static Future<void> init({bool enableAccountSync = false}) async {
     if (_isInitialized) {
       return;
     }
 
-    final prefs = await SharedPreferences.getInstance();
-    final values = prefs.getStringList(_storageKey) ?? <String>[];
-    favorites.value = values.map(int.tryParse).whereType<int>().toSet();
-
-    final aiValues = prefs.getStringList(_aiStorageKey) ?? <String>[];
-    aiFavorites.value = aiValues
-        .map((item) => jsonDecode(item))
-        .whereType<Map>()
-        .map((item) => AiRecipe.fromMap(Map<String, dynamic>.from(item)))
-        .where((recipe) => recipe.id.isNotEmpty)
-        .toList();
     _isInitialized = true;
+    _syncEnabled = enableAccountSync;
 
-    if (enableAccountSync) {
-      _syncEnabled = true;
-      Supabase.instance.client.auth.onAuthStateChange.listen((state) {
-        if (state.session != null) {
-          syncWithAccount();
-        }
-      });
-      await syncWithAccount();
+    if (!enableAccountSync) {
+      await _loadLegacyFavorites();
+      return;
     }
+
+    final initialUserId = _userId;
+    _legacyMigrationUserId = initialUserId;
+
+    Supabase.instance.client.auth.onAuthStateChange.listen((state) {
+      unawaited(_activateUser(state.session?.user.id));
+    });
+    await _activateUser(initialUserId);
   }
 
   static bool isFavorite(int recipeId) {
@@ -55,6 +53,11 @@ class LocalFavoritesStore {
   }
 
   static Future<void> toggle(int recipeId) async {
+    final userId = _currentStorageUserId;
+    if (_syncEnabled && userId == null) {
+      return;
+    }
+
     final next = Set<int>.from(favorites.value);
     final isAdded = next.add(recipeId);
     if (!isAdded) {
@@ -63,10 +66,19 @@ class LocalFavoritesStore {
     favorites.value = next;
 
     await _persistRecipeFavorites(next);
-    await _syncRecipeFavoriteChange(recipeId: recipeId, isFavorite: isAdded);
+    await _syncRecipeFavoriteChange(
+      userId: userId,
+      recipeId: recipeId,
+      isFavorite: isAdded,
+    );
   }
 
   static Future<void> toggleAiRecipe(AiRecipe recipe) async {
+    final userId = _currentStorageUserId;
+    if (_syncEnabled && userId == null) {
+      return;
+    }
+
     if (recipe.id.isEmpty) {
       return;
     }
@@ -82,22 +94,27 @@ class LocalFavoritesStore {
     aiFavorites.value = next;
 
     await _persistAiFavorites(next);
-    await _syncAiFavoriteChange(recipe: recipe, isFavorite: isAdded);
+    await _syncAiFavoriteChange(
+      userId: userId,
+      recipe: recipe,
+      isFavorite: isAdded,
+    );
   }
 
   static Future<void> syncWithAccount() async {
-    if (!_syncEnabled || _isSyncing || !_hasUser) {
+    final userId = _currentStorageUserId;
+    if (!_syncEnabled || userId == null || _syncingUserIds.contains(userId)) {
       return;
     }
 
-    _isSyncing = true;
+    _syncingUserIds.add(userId);
     try {
-      await _syncRecipeFavorites();
-      await _syncAiFavorites();
+      await _syncRecipeFavorites(userId);
+      await _syncAiFavorites(userId);
     } catch (error) {
       debugPrint('Favorite account sync failed: $error');
     } finally {
-      _isSyncing = false;
+      _syncingUserIds.remove(userId);
     }
   }
 
@@ -105,30 +122,195 @@ class LocalFavoritesStore {
 
   static String? get _userId => _supabase.auth.currentUser?.id;
 
-  static bool get _hasUser => _userId != null;
+  static String? get _currentStorageUserId {
+    if (!_syncEnabled) {
+      return null;
+    }
+
+    final userId = _userId;
+    if (userId == null || _activeUserId != userId) {
+      return null;
+    }
+    return userId;
+  }
+
+  static String _recipeStorageKey(String userId) {
+    return '$_storageKeyPrefix$userId';
+  }
+
+  static String _aiStorageKey(String userId) {
+    return '$_aiStorageKeyPrefix$userId';
+  }
+
+  static bool _isActiveUser(String userId) {
+    return _activeUserId == userId && _userId == userId;
+  }
+
+  static Future<void> _activateUser(String? userId) async {
+    if (_activeUserId == userId) {
+      if (userId != null) {
+        await syncWithAccount();
+      }
+      return;
+    }
+
+    _activeUserId = userId;
+    if (userId == null) {
+      favorites.value = <int>{};
+      aiFavorites.value = <AiRecipe>[];
+      return;
+    }
+
+    await _loadFavoritesForUser(userId);
+    if (!_isActiveUser(userId)) {
+      return;
+    }
+    await syncWithAccount();
+  }
+
+  static Future<void> _loadLegacyFavorites() async {
+    final prefs = await SharedPreferences.getInstance();
+    favorites.value = _readRecipeFavorites(prefs, _legacyStorageKey);
+    aiFavorites.value = _readAiFavorites(prefs, _legacyAiStorageKey);
+  }
+
+  static Future<void> _loadFavoritesForUser(String userId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final recipeKey = _recipeStorageKey(userId);
+    final aiKey = _aiStorageKey(userId);
+    final hasScopedRecipeKey = prefs.containsKey(recipeKey);
+    final hasScopedAiKey = prefs.containsKey(aiKey);
+
+    var recipeFavorites = _readRecipeFavorites(prefs, recipeKey);
+    var aiRecipeFavorites = _readAiFavorites(prefs, aiKey);
+
+    if (_legacyMigrationUserId == userId) {
+      if (!hasScopedRecipeKey) {
+        recipeFavorites = {
+          ..._readRecipeFavorites(prefs, _legacyStorageKey),
+          ...recipeFavorites,
+        };
+        await _persistRecipeFavoritesForUser(userId, recipeFavorites);
+      }
+      if (!hasScopedAiKey) {
+        aiRecipeFavorites = _dedupeAiFavorites([
+          ..._readAiFavorites(prefs, _legacyAiStorageKey),
+          ...aiRecipeFavorites,
+        ]);
+        await _persistAiFavoritesForUser(userId, aiRecipeFavorites);
+      }
+      _legacyMigrationUserId = null;
+    }
+
+    if (!_isActiveUser(userId)) {
+      return;
+    }
+
+    favorites.value = recipeFavorites;
+    aiFavorites.value = aiRecipeFavorites;
+  }
+
+  static Set<int> _readRecipeFavorites(
+    SharedPreferences prefs,
+    String storageKey,
+  ) {
+    final values = prefs.getStringList(storageKey) ?? <String>[];
+    return values.map(int.tryParse).whereType<int>().toSet();
+  }
+
+  static List<AiRecipe> _readAiFavorites(
+    SharedPreferences prefs,
+    String storageKey,
+  ) {
+    final values = prefs.getStringList(storageKey) ?? <String>[];
+    final recipes = <AiRecipe>[];
+    for (final item in values) {
+      try {
+        final decoded = jsonDecode(item);
+        if (decoded is Map) {
+          final recipe = AiRecipe.fromMap(Map<String, dynamic>.from(decoded));
+          if (recipe.id.isNotEmpty) {
+            recipes.add(recipe);
+          }
+        }
+      } catch (error) {
+        debugPrint('Invalid AI favorite cache item ignored: $error');
+      }
+    }
+    return _dedupeAiFavorites(recipes);
+  }
+
+  static List<AiRecipe> _dedupeAiFavorites(Iterable<AiRecipe> recipes) {
+    final byId = <String, AiRecipe>{};
+    for (final recipe in recipes) {
+      if (recipe.id.isNotEmpty) {
+        byId.putIfAbsent(recipe.id, () => recipe);
+      }
+    }
+    return byId.values.toList();
+  }
 
   static Future<void> _persistRecipeFavorites(Set<int> values) async {
+    final userId = _currentStorageUserId;
+    if (userId != null) {
+      await _persistRecipeFavoritesForUser(userId, values);
+      return;
+    }
+
+    if (!_syncEnabled) {
+      await _persistRecipeFavoritesForKey(_legacyStorageKey, values);
+    }
+  }
+
+  static Future<void> _persistAiFavorites(List<AiRecipe> values) async {
+    final userId = _currentStorageUserId;
+    if (userId != null) {
+      await _persistAiFavoritesForUser(userId, values);
+      return;
+    }
+
+    if (!_syncEnabled) {
+      await _persistAiFavoritesForKey(_legacyAiStorageKey, values);
+    }
+  }
+
+  static Future<void> _persistRecipeFavoritesForUser(
+    String userId,
+    Set<int> values,
+  ) async {
+    await _persistRecipeFavoritesForKey(_recipeStorageKey(userId), values);
+  }
+
+  static Future<void> _persistAiFavoritesForUser(
+    String userId,
+    List<AiRecipe> values,
+  ) async {
+    await _persistAiFavoritesForKey(_aiStorageKey(userId), values);
+  }
+
+  static Future<void> _persistRecipeFavoritesForKey(
+    String storageKey,
+    Set<int> values,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(
-      _storageKey,
+      storageKey,
       values.map((item) => item.toString()).toList(),
     );
   }
 
-  static Future<void> _persistAiFavorites(List<AiRecipe> values) async {
+  static Future<void> _persistAiFavoritesForKey(
+    String storageKey,
+    List<AiRecipe> values,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(
-      _aiStorageKey,
+      storageKey,
       values.map((item) => jsonEncode(item.toMap())).toList(),
     );
   }
 
-  static Future<void> _syncRecipeFavorites() async {
-    final userId = _userId;
-    if (userId == null) {
-      return;
-    }
-
+  static Future<void> _syncRecipeFavorites(String userId) async {
     final response =
         await _supabase
                 .from('user_favorite_recipes')
@@ -140,10 +322,15 @@ class LocalFavoritesStore {
         .whereType<num>()
         .map((item) => item.toInt())
         .toSet();
+
+    if (!_isActiveUser(userId)) {
+      return;
+    }
+
     final mergedIds = {...remoteIds, ...favorites.value};
 
     favorites.value = mergedIds;
-    await _persistRecipeFavorites(mergedIds);
+    await _persistRecipeFavoritesForUser(userId, mergedIds);
 
     if (mergedIds.isEmpty) {
       return;
@@ -159,12 +346,7 @@ class LocalFavoritesStore {
         );
   }
 
-  static Future<void> _syncAiFavorites() async {
-    final userId = _userId;
-    if (userId == null) {
-      return;
-    }
-
+  static Future<void> _syncAiFavorites(String userId) async {
     final response =
         await _supabase
                 .from('user_favorite_ai_recipes')
@@ -192,14 +374,17 @@ class LocalFavoritesStore {
         .where((recipe) => recipe.id.isNotEmpty)
         .toList();
 
-    final mergedById = <String, AiRecipe>{};
-    for (final recipe in [...aiFavorites.value, ...remoteRecipes]) {
-      mergedById.putIfAbsent(recipe.id, () => recipe);
+    if (!_isActiveUser(userId)) {
+      return;
     }
-    final mergedRecipes = mergedById.values.toList();
+
+    final mergedRecipes = _dedupeAiFavorites([
+      ...aiFavorites.value,
+      ...remoteRecipes,
+    ]);
 
     aiFavorites.value = mergedRecipes;
-    await _persistAiFavorites(mergedRecipes);
+    await _persistAiFavoritesForUser(userId, mergedRecipes);
 
     if (mergedRecipes.isEmpty) {
       return;
@@ -216,15 +401,18 @@ class LocalFavoritesStore {
   }
 
   static Future<void> _syncRecipeFavoriteChange({
+    required String? userId,
     required int recipeId,
     required bool isFavorite,
   }) async {
-    if (!_syncEnabled || !_hasUser || _isSyncing) {
+    if (!_syncEnabled ||
+        userId == null ||
+        !_isActiveUser(userId) ||
+        _syncingUserIds.contains(userId)) {
       return;
     }
 
     try {
-      final userId = _userId!;
       if (isFavorite) {
         await _supabase.from('user_favorite_recipes').upsert({
           'user_id': userId,
@@ -243,15 +431,18 @@ class LocalFavoritesStore {
   }
 
   static Future<void> _syncAiFavoriteChange({
+    required String? userId,
     required AiRecipe recipe,
     required bool isFavorite,
   }) async {
-    if (!_syncEnabled || !_hasUser || _isSyncing) {
+    if (!_syncEnabled ||
+        userId == null ||
+        !_isActiveUser(userId) ||
+        _syncingUserIds.contains(userId)) {
       return;
     }
 
     try {
-      final userId = _userId!;
       if (isFavorite) {
         await _supabase
             .from('user_favorite_ai_recipes')

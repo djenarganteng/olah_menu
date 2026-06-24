@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -22,16 +23,21 @@ class RecipeDetailScreen extends StatefulWidget {
     super.key,
     required this.recipe,
     this.selectedIngredientIds,
+    this.heroTag,
   }) : aiRecipe = null;
 
-  const RecipeDetailScreen.ai({super.key, required AiRecipe recipe})
-    : recipe = null,
-      aiRecipe = recipe,
-      selectedIngredientIds = null;
+  const RecipeDetailScreen.ai({
+    super.key,
+    required AiRecipe recipe,
+    this.heroTag,
+  }) : recipe = null,
+       aiRecipe = recipe,
+       selectedIngredientIds = null;
 
   final Recipe? recipe;
   final AiRecipe? aiRecipe;
   final Set<int>? selectedIngredientIds;
+  final String? heroTag;
 
   @override
   State<RecipeDetailScreen> createState() => _RecipeDetailScreenState();
@@ -149,6 +155,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                   height: 250,
                   borderRadius: 30,
                   topLabel: 'Detail Resep',
+                  heroTag: widget.heroTag,
                 ),
                 const SizedBox(height: 16),
                 Container(
@@ -764,12 +771,19 @@ class _IngredientTile extends StatelessWidget {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: imageUrl.isNotEmpty
-                  ? Image.network(
-                      imageUrl,
+                  ? CachedNetworkImage(
+                      imageUrl: imageUrl,
                       fit: BoxFit.contain,
                       alignment: Alignment.center,
                       filterQuality: FilterQuality.high,
-                      errorBuilder: (context, error, stackTrace) {
+                      placeholder: (context, url) => const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 1.5,
+                          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                        ),
+                      ),
+                      errorWidget: (context, url, error) {
                         return _IngredientFallbackIcon(
                           artKind: artKind,
                           isOwned: isOwned,

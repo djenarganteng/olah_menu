@@ -31,128 +31,191 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 430),
-              child: Container(
-                padding: const EdgeInsets.all(22),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(28),
-                  border: Border.all(color: AppColors.border),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x12000000),
-                      blurRadius: 26,
-                      offset: Offset(0, 10),
-                    ),
-                  ],
+      backgroundColor: const Color(0xFFEAF9E8),
+      body: _AuthBackground(
+        child: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isVeryCompact = constraints.maxHeight < 560;
+              final isCompact = constraints.maxHeight < 760;
+              final horizontalPadding = constraints.maxWidth < 390
+                  ? 22.0
+                  : 30.0;
+              final topPadding = isVeryCompact
+                  ? 8.0
+                  : isCompact
+                  ? 18.0
+                  : 40.0;
+
+              return SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  topPadding,
+                  horizontalPadding,
+                  32,
                 ),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const _AuthIcon(icon: Icons.lock_rounded),
-                      const SizedBox(height: 20),
-                      Text(
-                        'Masuk ke OlahMenu',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Lanjutkan untuk menyimpan resep dan bahan favoritmu.',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSoft,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      TextFormField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        textInputAction: TextInputAction.next,
-                        decoration: const InputDecoration(
-                          labelText: 'Email',
-                          prefixIcon: Icon(Icons.mail_outline_rounded),
-                        ),
-                        validator: _validateEmail,
-                      ),
-                      const SizedBox(height: 14),
-                      TextFormField(
-                        controller: _passwordController,
-                        obscureText: _obscurePassword,
-                        textInputAction: TextInputAction.done,
-                        decoration: InputDecoration(
-                          labelText: 'Password',
-                          prefixIcon: const Icon(Icons.lock_outline_rounded),
-                          suffixIcon: IconButton(
-                            onPressed: () => setState(
-                              () => _obscurePassword = !_obscurePassword,
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 620),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (!isVeryCompact) ...[
+                            Center(
+                              child: _BrandLogo(size: isCompact ? 118 : 142),
                             ),
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility_rounded
-                                  : Icons.visibility_off_rounded,
+                            SizedBox(height: isCompact ? 18 : 22),
+                          ],
+                          Text(
+                            'Masuk ke OlahMenu',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Color(0xFF050505),
+                              fontFamily: 'serif',
+                              fontSize: isVeryCompact
+                                  ? 26
+                                  : isCompact
+                                  ? 30
+                                  : 34,
+                              fontWeight: FontWeight.w400,
+                              height: 1.08,
                             ),
                           ),
-                        ),
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Password wajib diisi.'
-                            : null,
-                        onFieldSubmitted: (_) => _submit(),
-                      ),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: _isLoading || _isSendingReset
-                              ? null
-                              : _showPasswordResetDialog,
-                          child: _isSendingReset
-                              ? const Text('Mengirim...')
-                              : const Text('Lupa password?'),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton(
-                          onPressed: _isLoading ? null : _submit,
-                          child: _isLoading
-                              ? const SizedBox(
-                                  width: 22,
-                                  height: 22,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2.6,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Text('Masuk'),
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                      Center(
-                        child: TextButton(
-                          onPressed: _isLoading
-                              ? null
-                              : () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute<void>(
-                                      builder: (_) => const RegisterScreen(),
+                          if (!isVeryCompact) ...[
+                            SizedBox(height: isCompact ? 12 : 16),
+                            Text(
+                              'Lanjutkan untuk menyimpan resep\n'
+                              'dan bahan favoritmu.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Color(0xFF111111),
+                                fontSize: isCompact ? 16 : 18,
+                                fontWeight: FontWeight.w400,
+                                height: 1.32,
+                              ),
+                            ),
+                          ],
+                          SizedBox(
+                            height: isVeryCompact
+                                ? 14
+                                : isCompact
+                                ? 28
+                                : 34,
+                          ),
+                          TextFormField(
+                            controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            textInputAction: TextInputAction.next,
+                            style: _authFieldTextStyle,
+                            decoration: _authInputDecoration(
+                              hintText: 'Email',
+                              icon: Icons.mail_outline_rounded,
+                              isDense: isVeryCompact,
+                            ),
+                            validator: _validateEmail,
+                          ),
+                          SizedBox(
+                            height: isVeryCompact
+                                ? 10
+                                : isCompact
+                                ? 14
+                                : 16,
+                          ),
+                          TextFormField(
+                            controller: _passwordController,
+                            obscureText: _obscurePassword,
+                            textInputAction: TextInputAction.done,
+                            style: _authFieldTextStyle,
+                            decoration: _authInputDecoration(
+                              hintText: 'Password',
+                              icon: Icons.lock_outline_rounded,
+                              isDense: isVeryCompact,
+                              suffixIcon: IconButton(
+                                onPressed: () => setState(
+                                  () => _obscurePassword = !_obscurePassword,
+                                ),
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility_off_outlined
+                                      : Icons.visibility_outlined,
+                                ),
+                              ),
+                            ),
+                            validator: (value) => value == null || value.isEmpty
+                                ? 'Password wajib diisi.'
+                                : null,
+                            onFieldSubmitted: (_) => _submit(),
+                          ),
+                          SizedBox(height: isVeryCompact ? 2 : 6),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              style: _authLinkButtonStyle,
+                              onPressed: _isLoading || _isSendingReset
+                                  ? null
+                                  : _showPasswordResetDialog,
+                              child: _isSendingReset
+                                  ? const Text('Mengirim...')
+                                  : const Text('Lupa password?'),
+                            ),
+                          ),
+                          SizedBox(
+                            height: isVeryCompact
+                                ? 8
+                                : isCompact
+                                ? 18
+                                : 24,
+                          ),
+                          FilledButton(
+                            style: isVeryCompact
+                                ? _authCompactPrimaryButtonStyle
+                                : _authPrimaryButtonStyle,
+                            onPressed: _isLoading ? null : _submit,
+                            child: _isLoading
+                                ? const SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.6,
+                                      color: Colors.white,
                                     ),
-                                  );
-                                },
-                          child: const Text('Belum punya akun? Daftar'),
-                        ),
+                                  )
+                                : const Text('Masuk'),
+                          ),
+                          SizedBox(
+                            height: isVeryCompact
+                                ? 4
+                                : isCompact
+                                ? 10
+                                : 14,
+                          ),
+                          Center(
+                            child: TextButton(
+                              style: _authLinkButtonStyle,
+                              onPressed: _isLoading
+                                  ? null
+                                  : () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute<void>(
+                                          builder: (_) =>
+                                              const RegisterScreen(),
+                                        ),
+                                      );
+                                    },
+                              child: const Text('Belum punya akun? Daftar'),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         ),
       ),
@@ -236,23 +299,135 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-class _AuthIcon extends StatelessWidget {
-  const _AuthIcon({required this.icon});
+class _AuthBackground extends StatelessWidget {
+  const _AuthBackground({required this.child});
 
-  final IconData icon;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 64,
-      height: 64,
-      decoration: BoxDecoration(
-        color: AppColors.primarySoft,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Icon(icon, color: AppColors.primary, size: 30),
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: Image.asset(
+            'assets/backgrounds/leaf_background.png',
+            fit: BoxFit.cover,
+          ),
+        ),
+        const Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xF4F2FCEB),
+                  Color(0xEEE4F8E5),
+                  Color(0xF2EFFAEA),
+                ],
+              ),
+            ),
+          ),
+        ),
+        child,
+      ],
     );
   }
+}
+
+class _BrandLogo extends StatelessWidget {
+  const _BrandLogo({required this.size});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size * 1.9,
+      height: size,
+      child: Image.asset(
+        'assets/branding/olah_menu_logo.png',
+        fit: BoxFit.contain,
+      ),
+    );
+  }
+}
+
+const TextStyle _authFieldTextStyle = TextStyle(
+  color: Color(0xFF4C5052),
+  fontSize: 17,
+  fontWeight: FontWeight.w400,
+);
+
+final ButtonStyle _authPrimaryButtonStyle = FilledButton.styleFrom(
+  backgroundColor: const Color(0xFF05B94F),
+  disabledBackgroundColor: const Color(0xFF9BDDAD),
+  foregroundColor: Colors.white,
+  minimumSize: const Size.fromHeight(56),
+  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(34)),
+  textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+);
+
+final ButtonStyle _authCompactPrimaryButtonStyle = FilledButton.styleFrom(
+  backgroundColor: const Color(0xFF05B94F),
+  disabledBackgroundColor: const Color(0xFF9BDDAD),
+  foregroundColor: Colors.white,
+  minimumSize: const Size.fromHeight(48),
+  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+  textStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+);
+
+final ButtonStyle _authLinkButtonStyle = TextButton.styleFrom(
+  foregroundColor: const Color(0xFF2F7B37),
+  disabledForegroundColor: const Color(0xFF8BA98E),
+  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
+);
+
+InputDecoration _authInputDecoration({
+  required String hintText,
+  required IconData icon,
+  bool isDense = false,
+  Widget? suffixIcon,
+}) {
+  return InputDecoration(
+    hintText: hintText,
+    isDense: isDense,
+    filled: true,
+    fillColor: const Color(0xFFF3F5F6),
+    prefixIcon: Icon(icon, size: 26),
+    prefixIconColor: const Color(0xFF8C9094),
+    suffixIcon: suffixIcon,
+    suffixIconColor: const Color(0xFF8C9094),
+    contentPadding: EdgeInsets.symmetric(
+      horizontal: 18,
+      vertical: isDense ? 12 : 16,
+    ),
+    hintStyle: const TextStyle(
+      color: Color(0xFF8B8F94),
+      fontSize: 17,
+      fontWeight: FontWeight.w400,
+    ),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(19),
+      borderSide: const BorderSide(color: Color(0xFFD9DEE1)),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(19),
+      borderSide: const BorderSide(color: Color(0xFFD9DEE1)),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(19),
+      borderSide: const BorderSide(color: Color(0xFF05B94F), width: 1.4),
+    ),
+    errorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(19),
+      borderSide: const BorderSide(color: Color(0xFFD96441)),
+    ),
+    focusedErrorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(19),
+      borderSide: const BorderSide(color: Color(0xFFD96441), width: 1.4),
+    ),
+  );
 }
 
 class _PasswordResetDialog extends StatefulWidget {
@@ -290,26 +465,52 @@ class _PasswordResetDialogState extends State<_PasswordResetDialog> {
       title: const Text('Reset Password'),
       content: Form(
         key: _formKey,
-        child: TextFormField(
-          controller: _emailController,
-          autofocus: _emailController.text.trim().isEmpty,
-          keyboardType: TextInputType.emailAddress,
-          textInputAction: TextInputAction.done,
-          decoration: const InputDecoration(
-            labelText: 'Email akun',
-            prefixIcon: Icon(Icons.mail_outline_rounded),
-          ),
-          validator: widget.validateEmail,
-          onFieldSubmitted: (_) => _submit(),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextFormField(
+              controller: _emailController,
+              autofocus: _emailController.text.trim().isEmpty,
+              keyboardType: TextInputType.emailAddress,
+              textInputAction: TextInputAction.done,
+              decoration: const InputDecoration(
+                labelText: 'Alamat email',
+                prefixIcon: Icon(Icons.mail_outline_rounded),
+              ),
+              validator: widget.validateEmail,
+              onFieldSubmitted: (_) => _submit(),
+            ),
+            const SizedBox(height: 28),
+            SizedBox(
+              height: 54,
+              child: OutlinedButton(
+                onPressed: () => Navigator.of(context).pop(),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  side: const BorderSide(color: AppColors.primary),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  textStyle: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                child: const Text('Batal'),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 54,
+              child: FilledButton(
+                onPressed: _submit,
+                child: const Text('Kirim Link'),
+              ),
+            ),
+          ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Batal'),
-        ),
-        FilledButton(onPressed: _submit, child: const Text('Kirim Link')),
-      ],
     );
   }
 

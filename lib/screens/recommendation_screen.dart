@@ -51,31 +51,48 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF6FAF7),
+      extendBodyBehindAppBar: true,
       appBar: const AppHeader(title: 'Hasil Resep'),
       bottomNavigationBar: AppBottomNavBar(
         currentIndex: 2,
         onSelected: (index) => _handleNavigation(context, index),
       ),
-      body: SafeArea(
-        child: Consumer<RecommendationProvider>(
-          builder: (context, provider, _) {
-            return ListView(
-              padding: const EdgeInsets.fromLTRB(16, 6, 16, 20),
-              children: [
-                _TopBar(
-                  selectedCount: widget.selectedIngredients.length,
-                  onFilterTap: () => _showFilterSheet(context),
+      body: Stack(
+        children: [
+          // Background: subtle botanical leaves matching Favorites
+          const Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Color(0xFFF6FAF7), // Soft minty base color
+                image: DecorationImage(
+                  image: AssetImage('assets/backgrounds/favorites_bg.png'),
+                  fit: BoxFit.cover,
+                  opacity: 0.12, // Very subtle, non-distracting
                 ),
-                const SizedBox(height: 12),
-                _SelectedIngredientSummary(
-                  ingredients: widget.selectedIngredients,
-                ),
-                const SizedBox(height: 14),
-                _buildContent(context, provider),
-              ],
-            );
-          },
-        ),
+              ),
+            ),
+          ),
+          Consumer<RecommendationProvider>(
+            builder: (context, provider, _) {
+              return ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 103, 16, 20),
+                  children: [
+                    _TopBar(
+                      selectedCount: widget.selectedIngredients.length,
+                      onFilterTap: () => _showFilterSheet(context),
+                    ),
+                    const SizedBox(height: 12),
+                    _SelectedIngredientSummary(
+                      ingredients: widget.selectedIngredients,
+                    ),
+                    const SizedBox(height: 14),
+                    _buildContent(context, provider),
+                  ],
+                );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -143,6 +160,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     return ListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.zero,
       itemCount: sortedRecommendations.length,
       separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
@@ -157,6 +175,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
                   selectedIngredientIds: widget.selectedIngredients
                       .map((item) => item.id)
                       .toSet(),
+                  heroTag: 'recipe-image-recommendation-${recommendation.recipe.id}',
                 ),
               ),
             );

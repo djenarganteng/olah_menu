@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../models/ingredient.dart';
@@ -247,14 +248,24 @@ class _IngredientVisual extends StatelessWidget {
         child: imageUrl.isNotEmpty
             ? Padding(
                 padding: EdgeInsets.all(size * 0.05),
-                child: Image.network(
-                  imageUrl,
+                child: CachedNetworkImage(
+                  imageUrl: imageUrl,
                   width: size,
                   height: size,
                   fit: BoxFit.contain,
                   alignment: Alignment.center,
                   filterQuality: FilterQuality.high,
-                  errorBuilder: (context, error, stackTrace) {
+                  placeholder: (context, url) => const Center(
+                    child: SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 1.5,
+                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                      ),
+                    ),
+                  ),
+                  errorWidget: (context, url, error) {
                     final artKind = ingredientArtKindForName(
                       ingredient.name,
                       ingredient.category,

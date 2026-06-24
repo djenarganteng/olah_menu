@@ -54,6 +54,7 @@ class RecipeSummaryCard extends StatelessWidget {
                       onFavoriteTap: () async {
                         await LocalFavoritesStore.toggle(recipe.id);
                       },
+                      heroTag: 'recipe-image-${recipe.id}',
                     ),
                     Positioned(
                       left: 14,

@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
-import 'home_screen.dart';
+import 'auth/auth_gate.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -12,19 +12,30 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _logoPulseController;
+  late final Animation<double> _logoScale;
   Timer? _timer;
 
   @override
   void initState() {
     super.initState();
+    _logoPulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat(reverse: true);
+    _logoScale = Tween<double>(begin: 1, end: 1.02).animate(
+      CurvedAnimation(parent: _logoPulseController, curve: Curves.easeInOut),
+    );
+
     _timer = Timer(const Duration(seconds: 2), () {
       if (!mounted) {
         return;
       }
 
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute<void>(builder: (_) => const HomeScreen()),
+        MaterialPageRoute<void>(builder: (_) => const AuthGate()),
       );
     });
   }
@@ -32,76 +43,54 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void dispose() {
     _timer?.cancel();
+    _logoPulseController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
-          const Positioned(top: -40, right: -10, child: _SplashGlow(size: 180)),
-          const Positioned(
-            left: -30,
-            bottom: 120,
-            child: _SplashGlow(size: 140),
+          const Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFFF2F8F4), Colors.white],
+                ),
+              ),
+            ),
           ),
-          Center(
+          const Positioned.fill(
+            child: CustomPaint(painter: _DotPatternPainter()),
+          ),
+          SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+              child: Stack(
                 children: [
-                  Container(
-                    width: 104,
-                    height: 104,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(28),
-                      border: Border.all(color: AppColors.border),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x11000000),
-                          blurRadius: 24,
-                          offset: Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Container(
-                          width: 52,
-                          height: 52,
-                          decoration: BoxDecoration(
-                            color: AppColors.primarySoft,
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                        ),
-                        const Icon(
-                          Icons.eco_rounded,
-                          size: 34,
-                          color: AppColors.primary,
-                        ),
-                      ],
-                    ),
+                  Align(
+                    alignment: const Alignment(0, -0.08),
+                    child: _SplashMainContent(logoScale: _logoScale),
                   ),
-                  const SizedBox(height: 38),
-                  Text(
-                    'OlahMenu',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: AppColors.primaryDark,
-                      fontWeight: FontWeight.w800,
+                  const Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Padding(
+                      padding: EdgeInsets.only(bottom: 36),
+                      child: Text(
+                        'MENYIAPKAN DAPUR DIGITAL',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Color(0xFF9AA19B),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 4,
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Masak dari bahan yang kamu punya',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: AppColors.text,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
@@ -113,22 +102,65 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 }
 
-class _SplashGlow extends StatelessWidget {
-  const _SplashGlow({required this.size});
+class _SplashMainContent extends StatelessWidget {
+  const _SplashMainContent({required this.logoScale});
 
-  final double size;
+  final Animation<double> logoScale;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: RadialGradient(
-          colors: [Color(0x1F2E7D32), Color(0x002E7D32)],
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ScaleTransition(
+          scale: logoScale,
+          child: Image.asset(
+            'assets/branding/olah_menu_logo.png',
+            width: 220,
+            fit: BoxFit.contain,
+          ),
         ),
-      ),
+        const SizedBox(height: 36),
+        Text(
+          'Masak lezat dari bahan yang kamu\npunya.',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: const Color(0xFF474B59),
+            fontSize: 22,
+            height: 1.45,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 76),
+        const SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(
+            strokeWidth: 3,
+            color: AppColors.primary,
+            backgroundColor: Color(0x224CAF50),
+          ),
+        ),
+      ],
     );
   }
+}
+
+class _DotPatternPainter extends CustomPainter {
+  const _DotPatternPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = const Color(0x144CAF50);
+    const step = 20.0;
+
+    for (double y = 1; y < size.height; y += step) {
+      for (double x = 1; x < size.width; x += step) {
+        canvas.drawCircle(Offset(x, y), 0.85, paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

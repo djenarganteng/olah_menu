@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:provider/provider.dart';
 
@@ -35,6 +36,8 @@ class _IngredientSelectionScreenState extends State<IngredientSelectionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF0FAF2),
+      extendBodyBehindAppBar: true,
       appBar: const AppHeader(title: 'Pilih Bahan'),
       bottomNavigationBar: AppBottomNavBar(
         currentIndex: 1,
@@ -42,13 +45,27 @@ class _IngredientSelectionScreenState extends State<IngredientSelectionScreen> {
       ),
       body: Stack(
         children: [
-          const _SoftGlow(top: -60, right: -30, size: 160),
-          const _SoftGlow(bottom: 100, left: -40, size: 130),
+          // Background: watercolor botanical illustration
+          const Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Color(0xFFF0FAF2), // light mint base
+                image: DecorationImage(
+                  image: AssetImage('assets/backgrounds/ingredient_bg.png'),
+                  fit: BoxFit.cover,
+                  alignment: Alignment.center,
+                  opacity: 0.12, // Faded for maximum readability of small chips
+                ),
+              ),
+            ),
+          ),
+
           SafeArea(
+            top: false,
             child: Consumer<IngredientProvider>(
               builder: (context, provider, _) {
                 return ListView(
-                  padding: const EdgeInsets.fromLTRB(16, 6, 16, 154),
+                  padding: const EdgeInsets.fromLTRB(16, 103, 16, 154),
                   children: [
                     Text(
                       'Masak dari bahan yang ada',
@@ -125,11 +142,16 @@ class _IngredientSelectionScreenState extends State<IngredientSelectionScreen> {
                             'Bawang Putih',
                             'Kecap',
                           };
+                          bool added = false;
                           for (final ingredient in provider.ingredients) {
                             if (defaultNames.contains(ingredient.name) &&
                                 !provider.isSelected(ingredient.id)) {
                               provider.toggleSelection(ingredient);
+                              added = true;
                             }
+                          }
+                          if (added) {
+                            HapticFeedback.mediumImpact();
                           }
                         },
                         icon: const Icon(Icons.auto_awesome_rounded, size: 18),
@@ -199,6 +221,7 @@ class _IngredientSelectionScreenState extends State<IngredientSelectionScreen> {
       crossAxisCount: MediaQuery.sizeOf(context).width < 430 ? 2 : 3,
       mainAxisSpacing: 12,
       crossAxisSpacing: 12,
+      padding: EdgeInsets.zero,
       itemCount: provider.filteredIngredients.length,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -207,7 +230,10 @@ class _IngredientSelectionScreenState extends State<IngredientSelectionScreen> {
         return IngredientChip(
           ingredient: ingredient,
           isSelected: provider.isSelected(ingredient.id),
-          onTap: () => provider.toggleSelection(ingredient),
+          onTap: () {
+            provider.toggleSelection(ingredient);
+            HapticFeedback.lightImpact();
+          },
         );
       },
     );
@@ -295,7 +321,10 @@ class _BottomSelectionBar extends StatelessWidget {
                 const Spacer(),
                 if (provider.selectedCount > 0)
                   TextButton(
-                    onPressed: provider.clearSelectedIngredients,
+                    onPressed: () {
+                      provider.clearSelectedIngredients();
+                      HapticFeedback.mediumImpact();
+                    },
                     child: const Text('Reset'),
                   ),
               ],
@@ -341,40 +370,3 @@ class _BottomSelectionBar extends StatelessWidget {
   }
 }
 
-class _SoftGlow extends StatelessWidget {
-  const _SoftGlow({
-    this.top,
-    this.bottom,
-    this.left,
-    this.right,
-    required this.size,
-  });
-
-  final double? top;
-  final double? bottom;
-  final double? left;
-  final double? right;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned(
-      top: top,
-      bottom: bottom,
-      left: left,
-      right: right,
-      child: IgnorePointer(
-        child: Container(
-          width: size,
-          height: size,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: RadialGradient(
-              colors: [Color(0x3F5F8F57), Color(0x005F8F57)],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}

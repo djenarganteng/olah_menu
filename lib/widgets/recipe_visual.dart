@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../config/food_image_urls.dart';
@@ -14,6 +15,7 @@ class RecipeVisual extends StatelessWidget {
     this.isFavorite = false,
     this.onFavoriteTap,
     this.topLabel,
+    this.heroTag,
   });
 
   final Recipe recipe;
@@ -23,12 +25,50 @@ class RecipeVisual extends StatelessWidget {
   final bool isFavorite;
   final VoidCallback? onFavoriteTap;
   final String? topLabel;
+  final String? heroTag;
 
   @override
   Widget build(BuildContext context) {
     final palette = _paletteFor(recipe.name);
     final imageUrl = _imageUrlFor(recipe);
     final hasImage = imageUrl.isNotEmpty;
+
+    Widget visualContent;
+    if (hasImage) {
+      visualContent = CachedNetworkImage(
+        imageUrl: imageUrl,
+        fit: BoxFit.cover,
+        alignment: Alignment.center,
+        filterQuality: FilterQuality.high,
+        placeholder: (context, url) => Container(
+          color: palette.background.first,
+          child: const Center(
+            child: SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+              ),
+            ),
+          ),
+        ),
+        errorWidget: (context, url, error) =>
+            _FallbackArt(recipe: recipe, palette: palette),
+      );
+    } else {
+      visualContent = _FallbackArt(recipe: recipe, palette: palette);
+    }
+
+    if (heroTag != null) {
+      visualContent = Hero(
+        tag: heroTag!,
+        child: Material(
+          type: MaterialType.transparency,
+          child: visualContent,
+        ),
+      );
+    }
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),
@@ -57,19 +97,7 @@ class RecipeVisual extends StatelessWidget {
                 size: height * 0.52,
               ),
             ),
-            if (hasImage)
-              Positioned.fill(
-                child: Image.network(
-                  imageUrl,
-                  fit: BoxFit.cover,
-                  alignment: Alignment.center,
-                  filterQuality: FilterQuality.high,
-                  errorBuilder: (_, _, _) =>
-                      _FallbackArt(recipe: recipe, palette: palette),
-                ),
-              )
-            else
-              _FallbackArt(recipe: recipe, palette: palette),
+            Positioned.fill(child: visualContent),
             Positioned.fill(
               child: DecoratedBox(
                 decoration: BoxDecoration(

@@ -36,17 +36,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final selectedCount = context.watch<IngredientProvider>().selectedCount;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF6FAF7),
+      extendBodyBehindAppBar: true,
       appBar: const AppHeader(title: 'Profil'),
       bottomNavigationBar: AppBottomNavBar(
         currentIndex: 4,
         onSelected: (index) => _handleNavigation(context, index),
       ),
-      body: SafeArea(
-        child: Stack(
-          children: [
-            const _ProfileBackdrop(),
-            ListView(
-              padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
+      body: Stack(
+        children: [
+          // Background: botanical watercolor matching other screens
+          const Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Color(0xFFF6FAF7),
+                image: DecorationImage(
+                  image: AssetImage('assets/backgrounds/favorites_bg.png'),
+                  fit: BoxFit.cover,
+                  opacity: 0.12,
+                ),
+              ),
+            ),
+          ),
+          const _ProfileBackdrop(),
+          ListView(
+            padding: const EdgeInsets.fromLTRB(16, 103, 16, 24),
               children: [
                 _ProfileHero(
                   fullName: fullName,
@@ -232,9 +246,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
               ],
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

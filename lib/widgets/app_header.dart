@@ -8,23 +8,25 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   const AppHeader({
     super.key,
     this.showBackButton = true,
+    this.onLeadingTap,
     this.trailing,
     this.title = 'OlahMenu',
   });
 
   final bool showBackButton;
+  final VoidCallback? onLeadingTap;
   final Widget? trailing;
   final String title;
 
   @override
-  Size get preferredSize => const Size.fromHeight(72);
+  Size get preferredSize => const Size.fromHeight(68);
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       bottom: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 6),
         child: Container(
           height: 54,
           padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -47,9 +49,11 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                     ? Icons.arrow_back_rounded
                     : Icons.close_rounded,
                 filled: true,
-                onTap: showBackButton
-                    ? () => Navigator.of(context).maybePop()
-                    : null,
+                onTap:
+                    onLeadingTap ??
+                    (showBackButton
+                        ? () => Navigator.of(context).maybePop()
+                        : null),
               ),
               Expanded(
                 child: Center(
@@ -81,8 +85,12 @@ class HeaderAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final resolvedImageUrl = imageUrl ??
-        context.watch<AuthProvider>().user?.userMetadata?['avatar_url']
+    final resolvedImageUrl =
+        imageUrl ??
+        context
+            .watch<AuthProvider>()
+            .user
+            ?.userMetadata?['avatar_url']
             ?.toString();
 
     return InkWell(

@@ -6,9 +6,9 @@ import 'providers/auth_provider.dart';
 import 'providers/ingredient_provider.dart';
 import 'providers/recommendation_provider.dart';
 import 'providers/recipe_detail_provider.dart';
-import 'screens/auth/auth_gate.dart';
 import 'screens/home_screen.dart';
 import 'screens/profile_screen.dart';
+import 'screens/splash_screen.dart';
 import 'services/ai_recipe_service.dart';
 import 'services/auth_service.dart';
 import 'services/recommendation_service.dart';
@@ -71,7 +71,7 @@ class OlahMenuApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: 'OlahMenu',
         theme: theme,
-        home: const AuthGate(),
+        home: const SplashScreen(),
         routes: {
           HomeScreen.routeName: (_) => const HomeScreen(),
           ProfileScreen.routeName: (_) => const ProfileScreen(),

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../models/recipe.dart';
 import '../models/recipe_ingredient.dart';
+import '../providers/auth_provider.dart';
 import '../services/supabase_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/app_bottom_nav_bar.dart';
@@ -48,102 +49,138 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const AppHeader(showBackButton: false),
+      backgroundColor: const Color(0xFFF4FAF5),
+      extendBodyBehindAppBar: true,
+      appBar: AppHeader(
+        showBackButton: false,
+        onLeadingTap: _showLogoutConfirmation,
+      ),
       bottomNavigationBar: AppBottomNavBar(
         currentIndex: 0,
         onSelected: (index) => _handleNavigation(context, index),
       ),
-      body: FutureBuilder<_HomeData>(
-        future: _future,
-        builder: (context, snapshot) {
-          return CustomScrollView(
-            slivers: [
-              // ─── Hero Banner ───────────────────────────────────────────
-              SliverToBoxAdapter(child: _HeroBanner()),
+      body: Stack(
+        children: [
+          // Background: scattered vegetables on mint green
+          const Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Color(0xFFF4FAF5), // Soft minty base color
+                image: DecorationImage(
+                  image: AssetImage('assets/backgrounds/home_bg.png'),
+                  fit: BoxFit.cover,
+                  alignment: Alignment.topCenter,
+                  opacity: 0.15, // Faded for maximum contrast
+                ),
+              ),
+            ),
+          ),
+          FutureBuilder<_HomeData>(
+            future: _future,
+            builder: (context, snapshot) {
+              return CustomScrollView(
+                slivers: [
+                  // ─── Hero Banner ───────────────────────────────────────────
+                  SliverToBoxAdapter(child: _HeroBanner()),
 
-              // ─── Resep Rekomendasi Hari Ini (Grid) ─────────────────────
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
-                  child: Row(
-                    children: [
-                      const Text('🌿 '),
-                      Text(
-                        'Resep Rekomendasi Hari Ini',
+                  // ─── Resep Rekomendasi Hari Ini (Grid) ─────────────────────
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+                      child: Row(
+                        children: [
+                          const Text('🌿 '),
+                          Text(
+                            'Resep Rekomendasi Hari Ini',
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.2,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  if (snapshot.connectionState != ConnectionState.done)
+                    const SliverToBoxAdapter(child: _GridShimmer())
+                  else if (snapshot.hasData &&
+                      snapshot.data!.recipes.isNotEmpty)
+                    SliverToBoxAdapter(
+                      child: _RecommendationGrid(
+                        recipes: snapshot.data!.recipes.take(6).toList(),
+                        ingredientsMap: snapshot.data!.ingredientsMap,
+                        onTap: (recipe, heroTag) => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => RecipeDetailScreen(
+                              recipe: recipe,
+                              heroTag: heroTag,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  // ─── Koleksi Rekomendasi Resep (List) ──────────────────────
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+                      child: Text(
+                        'Koleksi Rekomendasi Resep',
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(
                               fontWeight: FontWeight.w800,
                               letterSpacing: -0.2,
                             ),
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
 
-              if (snapshot.connectionState != ConnectionState.done)
-                const SliverToBoxAdapter(child: _GridShimmer())
-              else if (snapshot.hasData && snapshot.data!.recipes.isNotEmpty)
-                SliverToBoxAdapter(
-                  child: _RecommendationGrid(
-                    recipes: snapshot.data!.recipes.take(6).toList(),
-                    ingredientsMap: snapshot.data!.ingredientsMap,
-                    onTap: (recipe) => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => RecipeDetailScreen(recipe: recipe),
+                  if (snapshot.connectionState != ConnectionState.done)
+                    const SliverToBoxAdapter(child: _ListShimmer())
+                  else if (snapshot.hasData &&
+                      snapshot.data!.recipes.isNotEmpty)
+                    SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final all = snapshot.data!.recipes;
+                          final recipe = all[index % all.length];
+                          final count =
+                              snapshot
+                                  .data!
+                                  .ingredientsMap[recipe.id]
+                                  ?.length ??
+                              0;
+                          return Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                            child: _CollectionTile(
+                              recipe: recipe,
+                              ingredientCount: count,
+                              onTap: () => Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => RecipeDetailScreen(
+                                    recipe: recipe,
+                                    heroTag:
+                                        'recipe-image-collection-${recipe.id}',
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                        childCount: snapshot.hasData
+                            ? snapshot.data!.recipes.length
+                            : 0,
                       ),
                     ),
-                  ),
-                ),
 
-              // ─── Koleksi Rekomendasi Resep (List) ──────────────────────
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
-                  child: Text(
-                    'Koleksi Rekomendasi Resep',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.2,
-                    ),
-                  ),
-                ),
-              ),
-
-              if (snapshot.connectionState != ConnectionState.done)
-                const SliverToBoxAdapter(child: _ListShimmer())
-              else if (snapshot.hasData && snapshot.data!.recipes.isNotEmpty)
-                SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final all = snapshot.data!.recipes;
-                      final recipe = all[index % all.length];
-                      final count =
-                          snapshot.data!.ingredientsMap[recipe.id]?.length ?? 0;
-                      return Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                        child: _CollectionTile(
-                          recipe: recipe,
-                          ingredientCount: count,
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) =>
-                                  RecipeDetailScreen(recipe: recipe),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                    childCount: snapshot.hasData
-                        ? snapshot.data!.recipes.length
-                        : 0,
-                  ),
-                ),
-
-              const SliverToBoxAdapter(child: SizedBox(height: 20)),
-            ],
-          );
-        },
+                  const SliverToBoxAdapter(child: SizedBox(height: 20)),
+                ],
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -178,6 +215,62 @@ class _HomeScreenState extends State<HomeScreen> {
       ).push(MaterialPageRoute<void>(builder: (_) => const ProfileScreen()));
     }
   }
+
+  Future<void> _showLogoutConfirmation() async {
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Keluar sesi?'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'Apakah kamu yakin ingin logout dan kembali ke halaman login?',
+              ),
+              const SizedBox(height: 28),
+              SizedBox(
+                height: 54,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(color: AppColors.primary),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  child: const Text('Tidak'),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 54,
+                child: FilledButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text('Iya'),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (shouldLogout != true || !mounted) {
+      return;
+    }
+
+    await context.read<AuthProvider>().logout();
+    if (mounted) {
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    }
+  }
 }
 
 // ─── Data class ──────────────────────────────────────────────────────────────
@@ -193,9 +286,10 @@ class _HomeData {
 class _HeroBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    const topPad =
+        68.0; // AppHeader preferredSize height only – Scaffold clips AppBar to this exact height
     return Container(
-      margin: const EdgeInsets.fromLTRB(0, 0, 0, 0),
-      height: 220,
+      margin: EdgeInsets.zero,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [Color(0xFFD6EAD8), Color(0xFFA8CBAB)],
@@ -232,19 +326,11 @@ class _HeroBanner extends StatelessWidget {
           ),
           // content
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+            padding: EdgeInsets.fromLTRB(20, topPad + 35, 20, 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  'OlahMenu',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.primaryDark.withValues(alpha: 0.7),
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(height: 12),
                 Text(
                   'Masak dari bahan yang\nkamu punya.',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -255,7 +341,7 @@ class _HeroBanner extends StatelessWidget {
                     height: 1.2,
                   ),
                 ),
-                const Spacer(),
+                const SizedBox(height: 16),
                 GestureDetector(
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(
@@ -312,19 +398,20 @@ class _RecommendationGrid extends StatelessWidget {
 
   final List<Recipe> recipes;
   final Map<int, List<RecipeIngredient>> ingredientsMap;
-  final void Function(Recipe) onTap;
+  final void Function(Recipe, String) onTap;
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = constraints.maxWidth < 380 ? 2 : 3;
-        final childAspectRatio = crossAxisCount == 2 ? 0.82 : 0.74;
+        final childAspectRatio = crossAxisCount == 2 ? 0.76 : 0.69;
 
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: GridView.builder(
             shrinkWrap: true,
+            padding: EdgeInsets.zero,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: crossAxisCount,
@@ -336,10 +423,11 @@ class _RecommendationGrid extends StatelessWidget {
             itemBuilder: (context, index) {
               final recipe = recipes[index];
               final count = ingredientsMap[recipe.id]?.length ?? 0;
+              final heroTag = 'recipe-image-grid-${recipe.id}';
               return _GridRecipeCard(
                 recipe: recipe,
                 ingredientCount: count,
-                onTap: () => onTap(recipe),
+                onTap: () => onTap(recipe, heroTag),
               );
             },
           ),
@@ -401,6 +489,7 @@ class _GridRecipeCard extends StatelessWidget {
                           borderRadius: 0,
                           showFavoriteAction: false,
                           isFavorite: isFavorite,
+                          heroTag: 'recipe-image-grid-${recipe.id}',
                         ),
                       ),
                       Positioned(
@@ -564,6 +653,7 @@ class _CollectionTile extends StatelessWidget {
                     borderRadius: 0,
                     showFavoriteAction: false,
                     isFavorite: false,
+                    heroTag: 'recipe-image-collection-${recipe.id}',
                   ),
                 ),
               ),
@@ -650,12 +740,13 @@ class _GridShimmer extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = constraints.maxWidth < 380 ? 2 : 3;
-        final childAspectRatio = crossAxisCount == 2 ? 0.82 : 0.74;
+        final childAspectRatio = crossAxisCount == 2 ? 0.76 : 0.69;
 
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: GridView.builder(
             shrinkWrap: true,
+            padding: EdgeInsets.zero,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: crossAxisCount,

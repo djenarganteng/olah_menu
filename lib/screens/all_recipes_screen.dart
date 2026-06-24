@@ -58,6 +58,8 @@ class _AllRecipesScreenState extends State<AllRecipesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF9FBF8),
+      extendBodyBehindAppBar: true,
       appBar: const AppHeader(title: 'Daftar Resep'),
       bottomNavigationBar: AppBottomNavBar(
         currentIndex: 2,
@@ -65,9 +67,21 @@ class _AllRecipesScreenState extends State<AllRecipesScreen> {
       ),
       body: Stack(
         children: [
-          const _SoftGlow(top: -60, right: -50, size: 160),
-          const _SoftGlow(bottom: 140, left: -40, size: 150),
+          // Background: subtle botanical leaves matching other screens
+          const Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Color(0xFFF9FBF8), // Soft off-white base color
+                image: DecorationImage(
+                  image: AssetImage('assets/backgrounds/favorites_bg.png'),
+                  fit: BoxFit.cover,
+                  opacity: 0.15, // Faded for maximum contrast
+                ),
+              ),
+            ),
+          ),
           SafeArea(
+            top: false,
             child: FutureBuilder<_RecipeCatalogData>(
               future: _future,
               builder: (context, snapshot) {
@@ -76,7 +90,7 @@ class _AllRecipesScreenState extends State<AllRecipesScreen> {
                     _selectedFilter != RecipeListFilter.all;
 
                 return ListView(
-                  padding: const EdgeInsets.fromLTRB(16, 6, 16, 20),
+                  padding: const EdgeInsets.fromLTRB(16, 103, 16, 20),
                   children: [
                     Container(
                       padding: const EdgeInsets.all(16),
@@ -204,6 +218,7 @@ class _AllRecipesScreenState extends State<AllRecipesScreen> {
         ListView.separated(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
+          padding: EdgeInsets.zero,
           itemCount: recipes.length,
           separatorBuilder: (_, _) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
@@ -215,7 +230,10 @@ class _AllRecipesScreenState extends State<AllRecipesScreen> {
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
-                    builder: (_) => RecipeDetailScreen(recipe: recipe),
+                    builder: (_) => RecipeDetailScreen(
+                      recipe: recipe,
+                      heroTag: 'recipe-image-${recipe.id}',
+                    ),
                   ),
                 );
               },
@@ -324,40 +342,4 @@ class _RecipeCatalogData {
   final Map<int, List<RecipeIngredient>> ingredientsMap;
 }
 
-class _SoftGlow extends StatelessWidget {
-  const _SoftGlow({
-    this.top,
-    this.bottom,
-    this.left,
-    this.right,
-    required this.size,
-  });
 
-  final double? top;
-  final double? bottom;
-  final double? left;
-  final double? right;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned(
-      top: top,
-      bottom: bottom,
-      left: left,
-      right: right,
-      child: IgnorePointer(
-        child: Container(
-          width: size,
-          height: size,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: RadialGradient(
-              colors: [Color(0x335F8F57), Color(0x005F8F57)],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}

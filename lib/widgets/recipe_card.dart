@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../models/recipe_recommendation.dart';
 import '../theme/app_colors.dart';
@@ -62,6 +62,7 @@ class RecipeCard extends StatelessWidget {
                       },
                       topLabel:
                           '${recommendation.matchLabel} · ${recommendation.matchPercentage.toStringAsFixed(0)}%',
+                      heroTag: 'recipe-image-recommendation-${recipe.id}',
                     ),
                     Positioned(
                       left: 14,
