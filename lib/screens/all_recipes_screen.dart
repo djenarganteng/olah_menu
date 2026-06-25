@@ -58,7 +58,8 @@ class _AllRecipesScreenState extends State<AllRecipesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FBF8),
+      backgroundColor: const Color(0xFFEAF4E6),
+      extendBody: true,
       extendBodyBehindAppBar: true,
       appBar: const AppHeader(title: 'Daftar Resep'),
       bottomNavigationBar: AppBottomNavBar(
@@ -67,16 +68,24 @@ class _AllRecipesScreenState extends State<AllRecipesScreen> {
       ),
       body: Stack(
         children: [
-          // Background: subtle botanical leaves matching other screens
           const Positioned.fill(
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: Color(0xFFF9FBF8), // Soft off-white base color
-                image: DecorationImage(
-                  image: AssetImage('assets/backgrounds/favorites_bg.png'),
-                  fit: BoxFit.cover,
-                  opacity: 0.15, // Faded for maximum contrast
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFFE6F3E1), Color(0xFFF7FBF4)],
                 ),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.15,
+              child: Image.asset(
+                'assets/backgrounds/favorites_bg.png',
+                fit: BoxFit.cover,
+                alignment: Alignment.topCenter,
               ),
             ),
           ),
@@ -85,76 +94,100 @@ class _AllRecipesScreenState extends State<AllRecipesScreen> {
             child: FutureBuilder<_RecipeCatalogData>(
               future: _future,
               builder: (context, snapshot) {
-                final hasActiveFilter =
-                    _query.trim().isNotEmpty ||
-                    _selectedFilter != RecipeListFilter.all;
+                final data = snapshot.data;
+                final recipes = data == null
+                    ? const <Recipe>[]
+                    : _filterRecipes(data.recipes, data.ingredientsMap);
 
                 return ListView(
                   padding: const EdgeInsets.fromLTRB(16, 103, 16, 20),
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: Column(
-                        children: [
-                          TextField(
-                            controller: _searchController,
-                            onChanged: (value) =>
-                                setState(() => _query = value),
-                            decoration: InputDecoration(
-                              hintText: 'Cari resep...',
-                              prefixIcon: const Icon(Icons.search_rounded),
-                              suffixIcon: _query.trim().isEmpty
-                                  ? null
-                                  : IconButton(
-                                      tooltip: 'Bersihkan pencarian',
-                                      onPressed: _resetSearchAndFilter,
-                                      icon: const Icon(Icons.close_rounded),
-                                    ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: RecipeListFilter.values.map((filter) {
-                                return ChoiceChip(
-                                  label: Text(_labelFor(filter)),
-                                  selected: _selectedFilter == filter,
-                                  onSelected: (_) {
-                                    setState(() {
-                                      _selectedFilter = filter;
-                                    });
-                                  },
-                                );
-                              }).toList(),
-                            ),
-                          ),
-                          if (hasActiveFilter) ...[
-                            const SizedBox(height: 10),
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: TextButton.icon(
-                                onPressed: _resetSearchAndFilter,
-                                icon: const Icon(
-                                  Icons.restart_alt_rounded,
-                                  size: 18,
-                                ),
-                                label: const Text('Reset pencarian dan filter'),
-                              ),
-                            ),
-                          ],
-                        ],
+                    _SearchField(
+                      controller: _searchController,
+                      query: _query,
+                      onChanged: (value) => setState(() => _query = value),
+                      onClear: _resetSearchAndFilter,
+                    ),
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      height: 40,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: RecipeListFilter.values.length,
+                        separatorBuilder: (_, _) => const SizedBox(width: 8),
+                        itemBuilder: (context, index) {
+                          final filter = RecipeListFilter.values[index];
+                          return ChoiceChip(
+                            label: Text(_labelFor(filter)),
+                            selected: _selectedFilter == filter,
+                            onSelected: (_) {
+                              setState(() {
+                                _selectedFilter = filter;
+                              });
+                            },
+                          );
+                        },
                       ),
                     ),
                     const SizedBox(height: 14),
-                    _buildContent(context, snapshot),
+                    if (snapshot.connectionState != ConnectionState.done)
+                      const LoadingState(
+                        title: 'Memuat daftar resep',
+                        message: 'Kami sedang menyiapkan resep yang tersedia.',
+                        compact: true,
+                      )
+                    else if (snapshot.hasError)
+                      EmptyState(
+                        icon: Icons.cloud_off_rounded,
+                        title: 'Gagal memuat resep',
+                        message: 'Periksa koneksi internet kamu lalu coba lagi.',
+                        actionLabel: 'Coba lagi',
+                        onAction: _reloadData,
+                      )
+                    else if (recipes.isEmpty)
+                      EmptyState(
+                        icon: Icons.menu_book_outlined,
+                        title: 'Resep tidak ditemukan',
+                        message:
+                            'Coba ubah kata kunci pencarian atau pilih filter lain.',
+                        actionLabel: 'Reset pencarian',
+                        onAction: _resetSearchAndFilter,
+                      )
+                    else ...[
+                      Text(
+                        '${recipes.length} resep ditemukan',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: AppColors.textSoft,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        padding: EdgeInsets.zero,
+                        itemCount: recipes.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final recipe = recipes[index];
+                          final count = data?.ingredientsMap[recipe.id]?.length ?? 0;
+                          return RecipeSummaryCard(
+                            recipe: recipe,
+                            ingredientCount: count,
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => RecipeDetailScreen(
+                                    recipe: recipe,
+                                    heroTag: 'recipe-image-${recipe.id}',
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ],
                   ],
                 );
               },
@@ -162,85 +195,6 @@ class _AllRecipesScreenState extends State<AllRecipesScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildContent(
-    BuildContext context,
-    AsyncSnapshot<_RecipeCatalogData> snapshot,
-  ) {
-    if (snapshot.connectionState != ConnectionState.done) {
-      return const LoadingState(
-        title: 'Memuat daftar resep',
-        message: 'Kami sedang menyiapkan resep yang tersedia.',
-        compact: true,
-      );
-    }
-
-    if (snapshot.hasError) {
-      return EmptyState(
-        icon: Icons.cloud_off_rounded,
-        title: 'Gagal memuat resep',
-        message: 'Periksa koneksi internet kamu lalu coba lagi.',
-        actionLabel: 'Coba lagi',
-        onAction: () {
-          setState(() {
-            _future = _loadData();
-          });
-        },
-      );
-    }
-
-    final data = snapshot.data!;
-    final recipes = _filterRecipes(data.recipes, data.ingredientsMap);
-
-    if (recipes.isEmpty) {
-      return EmptyState(
-        icon: Icons.menu_book_outlined,
-        title: 'Resep tidak ditemukan',
-        message: 'Coba ubah kata kunci pencarian atau pilih filter lain.',
-        actionLabel: 'Reset pencarian',
-        onAction: _resetSearchAndFilter,
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '${recipes.length} resep ditemukan',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: AppColors.textSoft,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: 12),
-        ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          padding: EdgeInsets.zero,
-          itemCount: recipes.length,
-          separatorBuilder: (_, _) => const SizedBox(height: 12),
-          itemBuilder: (context, index) {
-            final recipe = recipes[index];
-            final count = data.ingredientsMap[recipe.id]?.length ?? 0;
-            return RecipeSummaryCard(
-              recipe: recipe,
-              ingredientCount: count,
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => RecipeDetailScreen(
-                      recipe: recipe,
-                      heroTag: 'recipe-image-${recipe.id}',
-                    ),
-                  ),
-                );
-              },
-            );
-          },
-        ),
-      ],
     );
   }
 
@@ -271,10 +225,8 @@ class _AllRecipesScreenState extends State<AllRecipesScreen> {
         break;
       case RecipeListFilter.fewerIngredients:
         filtered.sort((a, b) {
-          final aCount =
-              ingredientMap[a.id]?.where((e) => e.isRequired).length ?? 0;
-          final bCount =
-              ingredientMap[b.id]?.where((e) => e.isRequired).length ?? 0;
+          final aCount = ingredientMap[a.id]?.where((e) => e.isRequired).length ?? 0;
+          final bCount = ingredientMap[b.id]?.where((e) => e.isRequired).length ?? 0;
           return aCount.compareTo(bCount);
         });
         break;
@@ -304,6 +256,12 @@ class _AllRecipesScreenState extends State<AllRecipesScreen> {
     });
   }
 
+  void _reloadData() {
+    setState(() {
+      _future = _loadData();
+    });
+  }
+
   void _handleNavigation(BuildContext context, int index) {
     if (index == 0) {
       Navigator.of(context).popUntil((route) => route.isFirst);
@@ -323,7 +281,6 @@ class _AllRecipesScreenState extends State<AllRecipesScreen> {
       );
       return;
     }
-
     if (index == 4) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute<void>(builder: (_) => const ProfileScreen()),
@@ -342,4 +299,53 @@ class _RecipeCatalogData {
   final Map<int, List<RecipeIngredient>> ingredientsMap;
 }
 
+class _SearchField extends StatelessWidget {
+  const _SearchField({
+    required this.controller,
+    required this.query,
+    required this.onChanged,
+    required this.onClear,
+  });
 
+  final TextEditingController controller;
+  final String query;
+  final ValueChanged<String> onChanged;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(999),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x13000000),
+            blurRadius: 24,
+            offset: Offset(0, 8),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: controller,
+        onChanged: onChanged,
+        decoration: InputDecoration(
+          hintText: 'Cari resep...',
+          prefixIcon: const Icon(Icons.search_rounded, size: 28),
+          suffixIcon: query.trim().isEmpty
+              ? null
+              : IconButton(
+                  tooltip: 'Bersihkan pencarian',
+                  onPressed: onClear,
+                  icon: const Icon(Icons.close_rounded),
+                ),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 18,
+          ),
+        ),
+      ),
+    );
+  }
+}

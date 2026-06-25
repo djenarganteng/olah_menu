@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/ingredient.dart';
 import '../models/recipe.dart';
 import '../models/recipe_ingredient.dart';
 import '../providers/auth_provider.dart';
+import '../providers/ingredient_provider.dart';
 import '../services/supabase_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/app_bottom_nav_bar.dart';
-import '../widgets/app_header.dart';
 import '../widgets/local_favorites_store.dart';
 import '../widgets/recipe_visual.dart';
 import 'all_recipes_screen.dart';
@@ -43,74 +44,93 @@ class _HomeScreenState extends State<HomeScreen> {
     for (final item in ingredients) {
       ingredientMap.putIfAbsent(item.recipeId, () => []).add(item);
     }
+
     return _HomeData(recipes: recipes, ingredientsMap: ingredientMap);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4FAF5),
+      backgroundColor: const Color(0xFFE9F4E6),
       extendBodyBehindAppBar: true,
-      appBar: AppHeader(
-        showBackButton: false,
-        onLeadingTap: _showLogoutConfirmation,
-      ),
+      appBar: _HomeHeader(onLogoutTap: _showLogoutConfirmation),
       bottomNavigationBar: AppBottomNavBar(
         currentIndex: 0,
         onSelected: (index) => _handleNavigation(context, index),
       ),
       body: Stack(
         children: [
-          // Background: scattered vegetables on mint green
           const Positioned.fill(
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: Color(0xFFF4FAF5), // Soft minty base color
-                image: DecorationImage(
-                  image: AssetImage('assets/backgrounds/home_bg.png'),
-                  fit: BoxFit.cover,
-                  alignment: Alignment.topCenter,
-                  opacity: 0.15, // Faded for maximum contrast
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFFE4F1E0), Color(0xFFF7FAF4)],
                 ),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.48,
+              child: Image.asset(
+                'assets/backgrounds/home_bg.png',
+                fit: BoxFit.cover,
+                alignment: Alignment.topCenter,
               ),
             ),
           ),
           FutureBuilder<_HomeData>(
             future: _future,
             builder: (context, snapshot) {
+              final recipes = snapshot.data?.recipes ?? const <Recipe>[];
+              final ingredientsMap =
+                  snapshot.data?.ingredientsMap ??
+                  const <int, List<RecipeIngredient>>{};
+              final selectedIngredients = context
+                  .watch<IngredientProvider>()
+                  .selectedIngredients;
+
               return CustomScrollView(
                 slivers: [
-                  // ─── Hero Banner ───────────────────────────────────────────
-                  SliverToBoxAdapter(child: _HeroBanner()),
-
-                  // ─── Resep Rekomendasi Hari Ini (Grid) ─────────────────────
+                  const SliverToBoxAdapter(child: _HeroBanner()),
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+                      padding: const EdgeInsets.fromLTRB(24, 28, 24, 16),
                       child: Row(
                         children: [
-                          const Text('🌿 '),
-                          Text(
-                            'Resep Rekomendasi Hari Ini',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: -0.2,
-                                ),
+                          const Icon(
+                            Icons.eco_rounded,
+                            color: AppColors.primary,
+                            size: 26,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Resep Rekomendasi Hari Ini',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
+                                    color: AppColors.text,
+                                    fontSize: 21,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                            ),
                           ),
                         ],
                       ),
                     ),
                   ),
-
                   if (snapshot.connectionState != ConnectionState.done)
                     const SliverToBoxAdapter(child: _GridShimmer())
-                  else if (snapshot.hasData &&
-                      snapshot.data!.recipes.isNotEmpty)
+                  else if (recipes.isNotEmpty)
                     SliverToBoxAdapter(
                       child: _RecommendationGrid(
-                        recipes: snapshot.data!.recipes.take(6).toList(),
-                        ingredientsMap: snapshot.data!.ingredientsMap,
+                        recipes: recipes.take(6).toList(),
+                        ingredientsMap: ingredientsMap,
+                        selectedIngredients: selectedIngredients,
                         onTap: (recipe, heroTag) => Navigator.of(context).push(
                           MaterialPageRoute<void>(
                             builder: (_) => RecipeDetailScreen(
@@ -121,61 +141,52 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
-
-                  // ─── Koleksi Rekomendasi Resep (List) ──────────────────────
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
-                      child: Text(
-                        'Koleksi Rekomendasi Resep',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -0.2,
-                            ),
+                  if (snapshot.connectionState == ConnectionState.done &&
+                      recipes.isNotEmpty) ...[
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 34, 24, 14),
+                        child: Text(
+                          'Koleksi Rekomendasi Resep',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                color: AppColors.text,
+                                fontSize: 21,
+                                fontWeight: FontWeight.w900,
+                              ),
+                        ),
                       ),
                     ),
-                  ),
-
-                  if (snapshot.connectionState != ConnectionState.done)
-                    const SliverToBoxAdapter(child: _ListShimmer())
-                  else if (snapshot.hasData &&
-                      snapshot.data!.recipes.isNotEmpty)
                     SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final all = snapshot.data!.recipes;
-                          final recipe = all[index % all.length];
-                          final count =
-                              snapshot
-                                  .data!
-                                  .ingredientsMap[recipe.id]
-                                  ?.length ??
-                              0;
-                          return Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                            child: _CollectionTile(
-                              recipe: recipe,
-                              ingredientCount: count,
-                              onTap: () => Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (_) => RecipeDetailScreen(
-                                    recipe: recipe,
-                                    heroTag:
-                                        'recipe-image-collection-${recipe.id}',
-                                  ),
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final recipe = recipes[index % recipes.length];
+                        final match = _RecipeMatch.calculate(
+                          recipeIngredients:
+                              ingredientsMap[recipe.id] ??
+                              const <RecipeIngredient>[],
+                          selectedIngredients: selectedIngredients,
+                        );
+                        return Padding(
+                          key: ValueKey('home-collection-${recipe.id}-$index'),
+                          padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+                          child: _CollectionTile(
+                            recipe: recipe,
+                            match: match,
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => RecipeDetailScreen(
+                                  recipe: recipe,
+                                  heroTag:
+                                      'recipe-image-collection-${recipe.id}',
                                 ),
                               ),
                             ),
-                          );
-                        },
-                        childCount: snapshot.hasData
-                            ? snapshot.data!.recipes.length
-                            : 0,
-                      ),
+                          ),
+                        );
+                      }, childCount: recipes.length),
                     ),
-
-                  const SliverToBoxAdapter(child: SizedBox(height: 20)),
+                  ],
+                  const SliverToBoxAdapter(child: SizedBox(height: 24)),
                 ],
               );
             },
@@ -273,89 +284,270 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// ─── Data class ──────────────────────────────────────────────────────────────
-
 class _HomeData {
   const _HomeData({required this.recipes, required this.ingredientsMap});
+
   final List<Recipe> recipes;
   final Map<int, List<RecipeIngredient>> ingredientsMap;
 }
 
-// ─── Hero Banner ─────────────────────────────────────────────────────────────
+class _RecipeMatch {
+  const _RecipeMatch._({
+    required this.percentage,
+    required this.matchedIngredientCount,
+    required this.totalIngredientCount,
+  });
 
-class _HeroBanner extends StatelessWidget {
+  final int percentage;
+  final int matchedIngredientCount;
+  final int totalIngredientCount;
+
+  static _RecipeMatch? calculate({
+    required List<RecipeIngredient> recipeIngredients,
+    required List<Ingredient> selectedIngredients,
+  }) {
+    if (selectedIngredients.isEmpty || recipeIngredients.isEmpty) {
+      return null;
+    }
+
+    final selectedIngredientIds = selectedIngredients
+        .map((item) => item.id)
+        .toSet();
+    final selectedIngredientNames = selectedIngredients
+        .map((item) => _normalizeIngredientName(item.name))
+        .toSet();
+
+    bool isMatched(RecipeIngredient item) {
+      final itemName = item.ingredientName == null
+          ? null
+          : _normalizeIngredientName(item.ingredientName!);
+      return selectedIngredientIds.contains(item.ingredientId) ||
+          (itemName != null && selectedIngredientNames.contains(itemName));
+    }
+
+    final requiredIngredients = recipeIngredients
+        .where((item) => item.isRequired)
+        .toList();
+    final optionalIngredients = recipeIngredients
+        .where((item) => !item.isRequired)
+        .toList();
+    final matchedRequiredCount = requiredIngredients
+        .where((item) => isMatched(item))
+        .length;
+    final matchedOptionalCount = optionalIngredients
+        .where((item) => isMatched(item))
+        .length;
+    final matchedIngredientCount = matchedRequiredCount + matchedOptionalCount;
+
+    final requiredScore = requiredIngredients.isEmpty
+        ? 1.0
+        : matchedRequiredCount / requiredIngredients.length;
+    final optionalScore = optionalIngredients.isEmpty
+        ? 1.0
+        : matchedOptionalCount / optionalIngredients.length;
+    final percentage = matchedIngredientCount == 0
+        ? 0
+        : ((requiredScore * 0.7 + optionalScore * 0.3) * 100).round().clamp(
+            0,
+            100,
+          );
+
+    return _RecipeMatch._(
+      percentage: percentage,
+      matchedIngredientCount: matchedIngredientCount,
+      totalIngredientCount: recipeIngredients.length,
+    );
+  }
+}
+
+String _normalizeIngredientName(String value) {
+  return value.trim().toLowerCase().replaceAll('pakcoy', 'pokcoy');
+}
+
+class _HomeHeader extends StatelessWidget implements PreferredSizeWidget {
+  const _HomeHeader({required this.onLogoutTap});
+
+  final VoidCallback onLogoutTap;
+
+  @override
+  Size get preferredSize => const Size.fromHeight(88);
+
   @override
   Widget build(BuildContext context) {
-    const topPad =
-        68.0; // AppHeader preferredSize height only – Scaffold clips AppBar to this exact height
+    return SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 10, 24, 8),
+        child: Container(
+          height: 62,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.96),
+            borderRadius: BorderRadius.circular(22),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x16000000),
+                blurRadius: 22,
+                offset: Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              _RoundIconButton(
+                icon: Icons.close_rounded,
+                onTap: onLogoutTap,
+                backgroundColor: const Color(0xFFF1F6EE),
+              ),
+              Expanded(
+                child: Text(
+                  'OlahMenu',
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: AppColors.primaryDark,
+                    fontFamily: 'serif',
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              const _HomeAvatar(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HomeAvatar extends StatelessWidget {
+  const _HomeAvatar();
+
+  @override
+  Widget build(BuildContext context) {
+    final imageUrl = context
+        .watch<AuthProvider>()
+        .user
+        ?.userMetadata?['avatar_url']
+        ?.toString();
+
+    return InkWell(
+      onTap: () => Navigator.of(context).pushNamed(ProfileScreen.routeName),
+      borderRadius: BorderRadius.circular(999),
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: AppColors.primarySoft,
+          border: Border.all(color: Colors.white, width: 2),
+          image: imageUrl == null || imageUrl.isEmpty
+              ? null
+              : DecorationImage(
+                  image: NetworkImage(imageUrl),
+                  fit: BoxFit.cover,
+                ),
+        ),
+        child: imageUrl == null || imageUrl.isEmpty
+            ? const Icon(
+                Icons.person_rounded,
+                size: 23,
+                color: AppColors.primaryDark,
+              )
+            : null,
+      ),
+    );
+  }
+}
+
+class _RoundIconButton extends StatelessWidget {
+  const _RoundIconButton({
+    required this.icon,
+    required this.onTap,
+    required this.backgroundColor,
+  });
+
+  final IconData icon;
+  final VoidCallback onTap;
+  final Color backgroundColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: backgroundColor,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: SizedBox(
+          width: 46,
+          height: 46,
+          child: Icon(icon, size: 25, color: AppColors.primaryDark),
+        ),
+      ),
+    );
+  }
+}
+
+class _HeroBanner extends StatelessWidget {
+  const _HeroBanner();
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.zero,
+      height: 276,
+      padding: const EdgeInsets.fromLTRB(24, 116, 24, 22),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFFD6EAD8), Color(0xFFA8CBAB)],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
+          colors: [Color(0xDDE5F3DF), Color(0xCCB8DDB7)],
         ),
       ),
       child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          // decorative circles top right
           Positioned(
-            top: -40,
-            right: -40,
-            child: Container(
-              width: 200,
-              height: 200,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.12),
-              ),
-            ),
+            top: -64,
+            right: -28,
+            child: _SoftCircle(size: 150, opacity: 0.18),
           ),
           Positioned(
-            top: 20,
-            right: 20,
-            child: Container(
-              width: 90,
-              height: 90,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.1),
-              ),
-            ),
+            top: -10,
+            right: 34,
+            child: _SoftCircle(size: 92, opacity: 0.12),
           ),
-          // content
-          Padding(
-            padding: EdgeInsets.fromLTRB(20, topPad + 35, 20, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Masak dari bahan yang\nkamu punya.',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.primaryDark,
-                    letterSpacing: -0.5,
-                    height: 1.2,
-                  ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Masak dari bahan\nyang kamu punya.',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: AppColors.primaryDark,
+                  fontSize: 30,
+                  height: 1.18,
+                  fontWeight: FontWeight.w900,
                 ),
-                const SizedBox(height: 16),
-                GestureDetector(
+              ),
+              const Spacer(),
+              Material(
+                color: AppColors.primaryDark,
+                borderRadius: BorderRadius.circular(999),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(999),
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(
                       builder: (_) => const IngredientSelectionScreen(),
                     ),
                   ),
-                  child: Container(
+                  child: Padding(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 11,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryDark,
-                      borderRadius: BorderRadius.circular(999),
+                      horizontal: 19,
+                      vertical: 13,
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -363,23 +555,23 @@ class _HeroBanner extends StatelessWidget {
                         const Icon(
                           Icons.shopping_bag_rounded,
                           color: Colors.white,
-                          size: 16,
+                          size: 18,
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 10),
                         Text(
                           'Pilih Bahan',
-                          style: Theme.of(context).textTheme.bodySmall
+                          style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(
                                 color: Colors.white,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.w800,
                               ),
                         ),
                       ],
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),
@@ -387,46 +579,72 @@ class _HeroBanner extends StatelessWidget {
   }
 }
 
-// ─── Recommendation Grid ─────────────────────────────────────────────────────
+class _SoftCircle extends StatelessWidget {
+  const _SoftCircle({required this.size, required this.opacity});
+
+  final double size;
+  final double opacity;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white.withValues(alpha: opacity),
+      ),
+    );
+  }
+}
 
 class _RecommendationGrid extends StatelessWidget {
   const _RecommendationGrid({
     required this.recipes,
     required this.ingredientsMap,
+    required this.selectedIngredients,
     required this.onTap,
   });
 
   final List<Recipe> recipes;
   final Map<int, List<RecipeIngredient>> ingredientsMap;
+  final List<Ingredient> selectedIngredients;
   final void Function(Recipe, String) onTap;
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth < 380 ? 2 : 3;
-        final childAspectRatio = crossAxisCount == 2 ? 0.76 : 0.69;
+        final crossAxisCount = constraints.maxWidth < 330 ? 2 : 3;
+        final childAspectRatio = crossAxisCount == 2 ? 0.74 : 0.66;
 
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 24),
           child: GridView.builder(
             shrinkWrap: true,
             padding: EdgeInsets.zero,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: crossAxisCount,
-              mainAxisSpacing: 10,
-              crossAxisSpacing: 10,
+              mainAxisSpacing: 14,
+              crossAxisSpacing: 14,
               childAspectRatio: childAspectRatio,
             ),
             itemCount: recipes.length,
             itemBuilder: (context, index) {
               final recipe = recipes[index];
-              final count = ingredientsMap[recipe.id]?.length ?? 0;
+              final match = _RecipeMatch.calculate(
+                recipeIngredients:
+                    ingredientsMap[recipe.id] ?? const <RecipeIngredient>[],
+                selectedIngredients: selectedIngredients,
+              );
               final heroTag = 'recipe-image-grid-${recipe.id}';
+
               return _GridRecipeCard(
+                key: ValueKey('home-grid-${recipe.id}'),
                 recipe: recipe,
-                ingredientCount: count,
+                match: match,
+                heroTag: heroTag,
                 onTap: () => onTap(recipe, heroTag),
               );
             },
@@ -439,13 +657,16 @@ class _RecommendationGrid extends StatelessWidget {
 
 class _GridRecipeCard extends StatelessWidget {
   const _GridRecipeCard({
+    super.key,
     required this.recipe,
-    required this.ingredientCount,
+    required this.match,
+    required this.heroTag,
     required this.onTap,
   });
 
   final Recipe recipe;
-  final int ingredientCount;
+  final _RecipeMatch? match;
+  final String heroTag;
   final VoidCallback onTap;
 
   @override
@@ -455,146 +676,113 @@ class _GridRecipeCard extends StatelessWidget {
       builder: (context, favorites, _) {
         final isFavorite = favorites.contains(recipe.id);
 
-        return GestureDetector(
-          onTap: onTap,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x0A000000),
-                  blurRadius: 8,
-                  offset: Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Image
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(15),
-                  ),
-                  child: Stack(
-                    children: [
-                      SizedBox(
-                        height: 84,
-                        width: double.infinity,
-                        child: RecipeVisual(
-                          recipe: recipe,
-                          height: 84,
-                          borderRadius: 0,
-                          showFavoriteAction: false,
-                          isFavorite: isFavorite,
-                          heroTag: 'recipe-image-grid-${recipe.id}',
-                        ),
-                      ),
-                      Positioned(
-                        top: 6,
-                        right: 6,
-                        child: GestureDetector(
-                          onTap: () async {
-                            await LocalFavoritesStore.toggle(recipe.id);
-                          },
-                          child: Container(
-                            width: 26,
-                            height: 26,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.9),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              isFavorite
-                                  ? Icons.favorite_rounded
-                                  : Icons.favorite_border_rounded,
-                              size: 14,
-                              color: isFavorite
-                                  ? AppColors.danger
-                                  : AppColors.textSoft,
+        return Material(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(17),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final imageHeight = (constraints.maxHeight * 0.49)
+                    .clamp(74.0, 98.0)
+                    .toDouble();
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      height: imageHeight,
+                      width: double.infinity,
+                      child: Stack(
+                        children: [
+                          Positioned.fill(
+                            child: RecipeVisual(
+                              recipe: recipe,
+                              height: imageHeight,
+                              borderRadius: 0,
+                              showFavoriteAction: false,
+                              isFavorite: isFavorite,
+                              heroTag: heroTag,
                             ),
                           ),
-                        ),
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: GestureDetector(
+                              onTap: () async {
+                                await LocalFavoritesStore.toggle(recipe.id);
+                              },
+                              child: Container(
+                                width: 34,
+                                height: 34,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.92),
+                                  shape: BoxShape.circle,
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Color(0x18000000),
+                                      blurRadius: 10,
+                                      offset: Offset(0, 3),
+                                    ),
+                                  ],
+                                ),
+                                child: Icon(
+                                  isFavorite
+                                      ? Icons.favorite_rounded
+                                      : Icons.favorite_border_rounded,
+                                  size: 20,
+                                  color: isFavorite
+                                      ? AppColors.danger
+                                      : AppColors.textSoft,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-                // Info
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(6),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          recipe.name,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.text,
-                                fontSize: 10.5,
-                                height: 1.2,
-                              ),
-                        ),
-                        const SizedBox(height: 3),
-                        Row(
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(10, 9, 9, 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(
-                              Icons.schedule_rounded,
-                              size: 10,
-                              color: AppColors.textSoft,
+                            Text(
+                              recipe.name,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
+                                    color: AppColors.text,
+                                    fontSize: 12.2,
+                                    height: 1.08,
+                                    fontWeight: FontWeight.w900,
+                                  ),
                             ),
-                            const SizedBox(width: 2),
-                            Flexible(
-                              child: Text(
-                                '${recipe.cookingTime}m',
+                            const Spacer(),
+                            _RecipeMetaRow(recipe: recipe),
+                            if (match != null) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                '${match!.percentage}% cocok',
+                                maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: Theme.of(context).textTheme.bodySmall
                                     ?.copyWith(
-                                      color: AppColors.textSoft,
-                                      fontSize: 9.5,
+                                      color: AppColors.primaryDark,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
                                     ),
                               ),
-                            ),
-                            const SizedBox(width: 4),
-                            Icon(
-                              Icons.people_alt_outlined,
-                              size: 10,
-                              color: AppColors.textSoft,
-                            ),
-                            const SizedBox(width: 2),
-                            Flexible(
-                              child: Text(
-                                '${recipe.defaultServing} porsi',
-                                overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(
-                                      color: AppColors.textSoft,
-                                      fontSize: 9.5,
-                                    ),
-                              ),
-                            ),
+                            ],
                           ],
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '$ingredientCount% bahan cocok',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 9.5,
-                              ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
-              ],
+                  ],
+                );
+              },
             ),
           ),
         );
@@ -603,58 +791,86 @@ class _GridRecipeCard extends StatelessWidget {
   }
 }
 
-// ─── Collection Tile (vertical list) ─────────────────────────────────────────
+class _RecipeMetaRow extends StatelessWidget {
+  const _RecipeMetaRow({required this.recipe});
+
+  final Recipe recipe;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = Theme.of(context).textTheme.bodySmall?.copyWith(
+      color: AppColors.text,
+      fontSize: 11,
+      height: 1,
+      fontWeight: FontWeight.w500,
+    );
+
+    return Row(
+      children: [
+        const Icon(Icons.schedule_rounded, size: 13, color: AppColors.textSoft),
+        const SizedBox(width: 3),
+        Flexible(
+          child: Text(
+            '${recipe.cookingTime}m',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: style,
+          ),
+        ),
+        const SizedBox(width: 6),
+        const Icon(
+          Icons.people_alt_outlined,
+          size: 13,
+          color: AppColors.textSoft,
+        ),
+        const SizedBox(width: 3),
+        Flexible(
+          child: Text(
+            '${recipe.defaultServing} porsi',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: style,
+          ),
+        ),
+      ],
+    );
+  }
+}
 
 class _CollectionTile extends StatelessWidget {
   const _CollectionTile({
     required this.recipe,
-    required this.ingredientCount,
+    required this.match,
     required this.onTap,
   });
 
   final Recipe recipe;
-  final int ingredientCount;
+  final _RecipeMatch? match;
   final VoidCallback onTap;
 
-  /// Derive a star rating (1–5) from recipe id for display variety
   int get _stars => 3 + (recipe.id % 3);
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.border),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x08000000),
-              blurRadius: 10,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
+    return Material(
+      color: Colors.white.withValues(alpha: 0.96),
+      borderRadius: BorderRadius.circular(20),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
         child: IntrinsicHeight(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // thumbnail — mengikuti tinggi konten
-              ClipRRect(
-                borderRadius: const BorderRadius.horizontal(
-                  left: Radius.circular(19),
-                ),
-                child: SizedBox(
-                  width: 96,
-                  child: RecipeVisual(
-                    recipe: recipe,
-                    height: 96,
-                    borderRadius: 0,
-                    showFavoriteAction: false,
-                    isFavorite: false,
-                    heroTag: 'recipe-image-collection-${recipe.id}',
-                  ),
+              SizedBox(
+                width: 96,
+                child: RecipeVisual(
+                  recipe: recipe,
+                  height: 96,
+                  borderRadius: 0,
+                  showFavoriteAction: false,
+                  isFavorite: false,
+                  heroTag: 'recipe-image-collection-${recipe.id}',
                 ),
               ),
               const SizedBox(width: 12),
@@ -670,52 +886,38 @@ class _CollectionTile extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
                           color: AppColors.text,
+                          fontWeight: FontWeight.w900,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 5),
+                      _RecipeMetaRow(recipe: recipe),
+                      const SizedBox(height: 5),
                       Row(
                         children: [
-                          Icon(
-                            Icons.schedule_rounded,
-                            size: 12,
-                            color: AppColors.textSoft,
-                          ),
-                          const SizedBox(width: 3),
-                          Text(
-                            '${recipe.cookingTime}m',
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: AppColors.textSoft),
-                          ),
-                          const SizedBox(width: 10),
-                          Icon(
-                            Icons.people_alt_outlined,
-                            size: 12,
-                            color: AppColors.textSoft,
-                          ),
-                          const SizedBox(width: 3),
-                          Text(
-                            '${recipe.defaultServing} porsi',
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: AppColors.textSoft),
-                          ),
+                          ...List.generate(5, (index) {
+                            return Icon(
+                              index < _stars
+                                  ? Icons.star_rounded
+                                  : Icons.star_outline_rounded,
+                              size: 15,
+                              color: index < _stars
+                                  ? const Color(0xFFE4A01A)
+                                  : const Color(0xFFDDDDDD),
+                            );
+                          }),
+                          if (match != null) ...[
+                            const SizedBox(width: 8),
+                            Text(
+                              '${match!.percentage}% cocok',
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: AppColors.primaryDark,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                            ),
+                          ],
                         ],
-                      ),
-                      const SizedBox(height: 5),
-                      // Star rating row
-                      Row(
-                        children: List.generate(5, (i) {
-                          return Icon(
-                            i < _stars
-                                ? Icons.star_rounded
-                                : Icons.star_outline_rounded,
-                            size: 15,
-                            color: i < _stars
-                                ? const Color(0xFFE4A01A)
-                                : const Color(0xFFDDDDDD),
-                          );
-                        }),
                       ),
                     ],
                   ),
@@ -730,8 +932,6 @@ class _CollectionTile extends StatelessWidget {
   }
 }
 
-// ─── Shimmer Placeholders ─────────────────────────────────────────────────────
-
 class _GridShimmer extends StatelessWidget {
   const _GridShimmer();
 
@@ -739,55 +939,31 @@ class _GridShimmer extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth < 380 ? 2 : 3;
-        final childAspectRatio = crossAxisCount == 2 ? 0.76 : 0.69;
+        final crossAxisCount = constraints.maxWidth < 330 ? 2 : 3;
+        final childAspectRatio = crossAxisCount == 2 ? 0.74 : 0.66;
 
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 24),
           child: GridView.builder(
             shrinkWrap: true,
             padding: EdgeInsets.zero,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: crossAxisCount,
-              mainAxisSpacing: 10,
-              crossAxisSpacing: 10,
+              mainAxisSpacing: 14,
+              crossAxisSpacing: 14,
               childAspectRatio: childAspectRatio,
             ),
             itemCount: 6,
             itemBuilder: (context, index) => Container(
               decoration: BoxDecoration(
-                color: AppColors.border,
-                borderRadius: BorderRadius.circular(16),
+                color: Colors.white.withValues(alpha: 0.74),
+                borderRadius: BorderRadius.circular(17),
               ),
             ),
           ),
         );
       },
-    );
-  }
-}
-
-class _ListShimmer extends StatelessWidget {
-  const _ListShimmer();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        children: List.generate(
-          3,
-          (_) => Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            height: 96,
-            decoration: BoxDecoration(
-              color: AppColors.border,
-              borderRadius: BorderRadius.circular(20),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

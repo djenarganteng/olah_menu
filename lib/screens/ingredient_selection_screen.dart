@@ -36,7 +36,7 @@ class _IngredientSelectionScreenState extends State<IngredientSelectionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF0FAF2),
+      backgroundColor: const Color(0xFFEFF8EF),
       extendBodyBehindAppBar: true,
       appBar: const AppHeader(title: 'Pilih Bahan'),
       bottomNavigationBar: AppBottomNavBar(
@@ -45,17 +45,14 @@ class _IngredientSelectionScreenState extends State<IngredientSelectionScreen> {
       ),
       body: Stack(
         children: [
-          // Background: watercolor botanical illustration
-          const Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: Color(0xFFF0FAF2), // light mint base
-                image: DecorationImage(
-                  image: AssetImage('assets/backgrounds/ingredient_bg.png'),
-                  fit: BoxFit.cover,
-                  alignment: Alignment.center,
-                  opacity: 0.12, // Faded for maximum readability of small chips
-                ),
+          const Positioned.fill(child: ColoredBox(color: Color(0xFFEFF8EF))),
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.32,
+              child: Image.asset(
+                'assets/backgrounds/ingredient_bg.png',
+                fit: BoxFit.cover,
+                alignment: Alignment.topCenter,
               ),
             ),
           ),
@@ -369,4 +366,3 @@ class _BottomSelectionBar extends StatelessWidget {
     );
   }
 }
-

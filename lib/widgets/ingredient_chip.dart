@@ -77,66 +77,60 @@ class IngredientChip extends StatelessWidget {
                   horizontal: 14,
                   vertical: 12,
                 ),
-                child: Row(
+                child: Stack(
                   children: [
-                    // Kiri: Informasi Teks (Nama & Kategori)
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            ingredient.name,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: nameStyle,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            ingredient.category,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(
-                                  color: AppColors.textSoft.withValues(
-                                    alpha: 0.8,
-                                  ),
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 11,
-                                ),
-                          ),
-                        ],
+                    Positioned(
+                      top: -4,
+                      right: -4,
+                      child: _SelectionDot(
+                        isSelected: isSelected,
+                        primary: AppColors.primary,
                       ),
                     ),
-                    const SizedBox(width: 8),
-
-                    // Kanan: Area Visual Gambar & Indikator Centang
-                    Stack(
-                      alignment: Alignment.center,
-                      clipBehavior: Clip.none,
+                    Row(
                       children: [
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  ingredient.name,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: nameStyle,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  ingredient.category,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(
+                                        color: AppColors.textSoft,
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: compact ? 11 : 12,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
                         Container(
                           width: imageSize,
                           height: imageSize,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: isSelected
-                                ? Colors.white.withValues(alpha: 0.8)
-                                : Colors.white.withValues(alpha: 0.4),
+                            color: Colors.white.withValues(alpha: 0.48),
                           ),
-                        ),
-                        _IngredientVisual(
-                          ingredient: ingredient,
-                          accent: accent,
-                          imageUrl: imageUrl,
-                          size: imageSize,
-                        ),
-                        Positioned(
-                          right: -4,
-                          top: -4,
-                          child: _SelectionDot(
-                            isSelected: isSelected,
-                            primary: AppColors.primary,
+                          child: _IngredientVisual(
+                            ingredient: ingredient,
+                            accent: accent,
+                            imageUrl: imageUrl,
+                            size: imageSize,
                           ),
                         ),
                       ],
@@ -209,7 +203,7 @@ class _SelectionDot extends StatelessWidget {
         color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.9),
         border: Border.all(
           color: isSelected ? primary : const Color(0xFFB0C4A7),
-          width: 1.4,
+          width: 1.2,
         ),
         boxShadow: const [
           BoxShadow(
@@ -261,7 +255,9 @@ class _IngredientVisual extends StatelessWidget {
                       height: 14,
                       child: CircularProgressIndicator(
                         strokeWidth: 1.5,
-                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          AppColors.primary,
+                        ),
                       ),
                     ),
                   ),
