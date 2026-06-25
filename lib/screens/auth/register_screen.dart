@@ -38,16 +38,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
         child: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
+              final keyboardInset = MediaQuery.of(context).viewInsets.bottom;
+              final keyboardVisible = keyboardInset > 0;
               final isVeryCompact = constraints.maxHeight < 640;
               final isCompact = constraints.maxHeight < 760;
               final horizontalPadding = constraints.maxWidth < 390
                   ? 20.0
                   : 30.0;
               final topPadding = isVeryCompact
-                  ? 56.0
+                  ? 70.0
                   : isCompact
-                  ? 74.0
-                  : 92.0;
+                  ? 90.0
+                  : 110.0;
+              final adjustedTopPadding =
+                  topPadding + (keyboardVisible ? 40.0 : 0.0);
               final cardHorizontalPadding = constraints.maxWidth < 390
                   ? 22.0
                   : 34.0;
@@ -57,7 +61,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   SingleChildScrollView(
                     padding: EdgeInsets.fromLTRB(
                       horizontalPadding,
-                      topPadding,
+                      adjustedTopPadding,
                       horizontalPadding,
                       32,
                     ),
@@ -361,7 +365,7 @@ class _RegisterBackground extends StatelessWidget {
       children: [
         Positioned.fill(
           child: Image.asset(
-            'assets/backgrounds/leaf_background.png',
+            'assets/backgrounds/auth_soft_leaf_bg.png',
             fit: BoxFit.cover,
           ),
         ),
@@ -372,9 +376,9 @@ class _RegisterBackground extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Color(0xF7F5FBF1),
-                  Color(0xF0E5F9E8),
-                  Color(0xF5F3FBF1),
+                  Color(0x33F6FBF0),
+                  Color(0x22EAF7E7),
+                  Color(0x30F3F8EE),
                 ],
               ),
             ),

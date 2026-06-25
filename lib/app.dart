@@ -67,15 +67,17 @@ class OlahMenuApp extends StatelessWidget {
           create: (_) => RecipeDetailProvider(supabaseService: supabaseService),
         ),
       ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'OlahMenu',
-        theme: theme,
-        home: const SplashScreen(),
-        routes: {
-          HomeScreen.routeName: (_) => const HomeScreen(),
-          ProfileScreen.routeName: (_) => const ProfileScreen(),
-        },
+      child: ScrollNotificationObserver(
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'OlahMenu',
+          theme: theme,
+          home: const SplashScreen(),
+          routes: {
+            HomeScreen.routeName: (_) => const HomeScreen(),
+            ProfileScreen.routeName: (_) => const ProfileScreen(),
+          },
+        ),
       ),
     );
   }

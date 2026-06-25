@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_colors.dart';
 
-class AppHeader extends StatelessWidget implements PreferredSizeWidget {
+class AppHeader extends StatefulWidget implements PreferredSizeWidget {
   const AppHeader({
     super.key,
     this.showBackButton = true,
@@ -19,58 +19,119 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   final String title;
 
   @override
+  State<AppHeader> createState() => _AppHeaderState();
+
+  @override
   Size get preferredSize => const Size.fromHeight(68);
+}
+
+class _AppHeaderState extends State<AppHeader> {
+  ScrollNotificationObserverState? _observer;
+  bool _visible = true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _observer?.removeListener(_handleScrollNotification);
+    _observer = ScrollNotificationObserver.maybeOf(context);
+    _observer?.addListener(_handleScrollNotification);
+  }
+
+  @override
+  void dispose() {
+    _observer?.removeListener(_handleScrollNotification);
+    super.dispose();
+  }
+
+  void _handleScrollNotification(ScrollNotification notification) {
+    if (!mounted) {
+      return;
+    }
+
+    if (notification.depth != 0) {
+      return;
+    }
+
+    if (notification is ScrollUpdateNotification) {
+      final delta = notification.scrollDelta ?? 0;
+      if (delta.abs() < 0.5) {
+        return;
+      }
+
+      final nextVisible = delta < 0;
+      if (nextVisible != _visible) {
+        setState(() => _visible = nextVisible);
+      }
+      return;
+    }
+
+    if (notification is OverscrollNotification && notification.overscroll < 0) {
+      if (!_visible) {
+        setState(() => _visible = true);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      bottom: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 6),
-        child: Container(
-          height: 54,
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.78),
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: AppColors.border),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x0C000000),
-                blurRadius: 18,
-                offset: Offset(0, 8),
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 180),
+      opacity: _visible ? 1 : 0,
+      child: AnimatedSlide(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        offset: _visible ? Offset.zero : const Offset(0, -0.18),
+        child: SafeArea(
+          bottom: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 6),
+            child: Container(
+              height: 54,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.78),
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(color: AppColors.border),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x0C000000),
+                    blurRadius: 18,
+                    offset: Offset(0, 8),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: Row(
-            children: [
-              _CircleButton(
-                icon: showBackButton
-                    ? Icons.arrow_back_rounded
-                    : Icons.close_rounded,
-                filled: true,
-                onTap:
-                    onLeadingTap ??
-                    (showBackButton
-                        ? () => Navigator.of(context).maybePop()
-                        : null),
-              ),
-              Expanded(
-                child: Center(
-                  child: Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: AppColors.text,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.2,
+              child: Row(
+                children: [
+                  _CircleButton(
+                    icon: widget.showBackButton
+                        ? Icons.arrow_back_rounded
+                        : Icons.close_rounded,
+                    filled: true,
+                    onTap:
+                        widget.onLeadingTap ??
+                        (widget.showBackButton
+                            ? () => Navigator.of(context).maybePop()
+                            : null),
+                  ),
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        widget.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: AppColors.text,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.2,
+                            ),
+                      ),
                     ),
                   ),
-                ),
+                  widget.trailing ?? const HeaderAvatar(),
+                ],
               ),
-              trailing ?? const HeaderAvatar(),
-            ],
+            ),
           ),
         ),
       ),
