@@ -3,12 +3,19 @@ import 'package:flutter/material.dart';
 import '../models/ai_recipe.dart';
 import '../theme/app_colors.dart';
 import 'local_favorites_store.dart';
+import 'ai_recipe_visual.dart';
 
 class AiRecipeCard extends StatelessWidget {
-  const AiRecipeCard({super.key, required this.recipe, required this.onTap});
+  const AiRecipeCard({
+    super.key,
+    required this.recipe,
+    required this.onTap,
+    this.heroTag,
+  });
 
   final AiRecipe recipe;
   final VoidCallback onTap;
+  final String? heroTag;
 
   @override
   Widget build(BuildContext context) {
@@ -29,144 +36,135 @@ class AiRecipeCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(28),
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 54,
-                    height: 54,
-                    decoration: BoxDecoration(
-                      color: AppColors.primarySoft,
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: const Icon(
-                      Icons.auto_awesome_rounded,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _AiBadge(text: recipe.sourceBadgeLabel),
-                        const SizedBox(height: 8),
-                        Text(
-                          recipe.title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(fontWeight: FontWeight.w800),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                recipe.description.isEmpty
-                    ? 'Resep rumahan yang dibuat dari bahan pilihanmu.'
-                    : recipe.description,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSoft,
-                  height: 1.45,
-                ),
-              ),
-              const SizedBox(height: 14),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _MetaPill(
-                    icon: Icons.schedule_rounded,
-                    label: '${recipe.cookingTime} menit',
-                  ),
-                  _MetaPill(
-                    icon: Icons.people_alt_outlined,
-                    label: '${recipe.servings} porsi',
-                  ),
-                  _MetaPill(
-                    icon: Icons.inventory_2_outlined,
-                    label: '${recipe.ingredients.length} bahan',
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              ValueListenableBuilder<List<AiRecipe>>(
-                valueListenable: LocalFavoritesStore.aiFavorites,
-                builder: (context, _, _) {
-                  final isFavorite = LocalFavoritesStore.isAiFavorite(
-                    recipe.id,
-                  );
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ValueListenableBuilder<List<AiRecipe>>(
+              valueListenable: LocalFavoritesStore.aiFavorites,
+              builder: (context, favorites, _) {
+                final isFavorite = favorites.any((item) => item.id == recipe.id);
 
-                  return Column(
-                    children: [
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton.icon(
-                          onPressed: onTap,
-                          icon: const Icon(Icons.menu_book_rounded),
-                          label: const Text('Lihat Resep AI'),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton.icon(
-                          onPressed: () =>
-                              LocalFavoritesStore.toggleAiRecipe(recipe),
-                          icon: Icon(
-                            isFavorite
-                                ? Icons.favorite_rounded
-                                : Icons.favorite_border_rounded,
-                          ),
-                          label: Text(
-                            isFavorite
-                                ? 'Tersimpan di Favorit'
-                                : 'Simpan ke Favorit',
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
-                },
+                return AiRecipeVisual(
+                  recipe: recipe,
+                  height: 176,
+                  borderRadius: 28,
+                  heroTag: heroTag ?? 'ai-recipe-${recipe.id}',
+                  showFavoriteAction: true,
+                  isFavorite: isFavorite,
+                  onFavoriteTap: () => LocalFavoritesStore.toggleAiRecipe(
+                    recipe,
+                  ),
+                );
+              },
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: _AiBody(
+                recipe: recipe,
+                onTap: onTap,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _AiBadge extends StatelessWidget {
-  const _AiBadge({required this.text});
+class _AiBody extends StatelessWidget {
+  const _AiBody({required this.recipe, required this.onTap});
 
-  final String text;
+  final AiRecipe recipe;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF3D8),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: AppColors.accent.withValues(alpha: 0.35)),
-      ),
-      child: Text(
-        text,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: const Color(0xFF8A5A18),
-          fontWeight: FontWeight.w800,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          recipe.title,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.2,
+          ),
         ),
-      ),
+        const SizedBox(height: 8),
+        Text(
+          recipe.description.isEmpty
+              ? 'Resep rumahan yang dibuat dari bahan pilihanmu.'
+              : recipe.description,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: AppColors.textSoft,
+            height: 1.45,
+          ),
+        ),
+        const SizedBox(height: 14),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _MetaPill(
+              icon: Icons.schedule_rounded,
+              label: recipe.estimatedTime.isNotEmpty
+                  ? recipe.estimatedTime
+                  : '${recipe.cookingTime} menit',
+            ),
+            _MetaPill(
+              icon: Icons.people_alt_outlined,
+              label: '${recipe.servings} porsi',
+            ),
+            _MetaPill(
+              icon: Icons.local_fire_department_rounded,
+              label: recipe.difficulty,
+            ),
+          ],
+        ),
+        if (recipe.tips.isNotEmpty) ...[
+          const SizedBox(height: 14),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.backgroundSoft,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.tips_and_updates_rounded,
+                  size: 18,
+                  color: AppColors.primary,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    '${recipe.tips.length} tips memasak siap dipakai',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.text,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+        const SizedBox(height: 14),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: onTap,
+            icon: const Icon(Icons.menu_book_rounded),
+            label: const Text('Lihat Resep AI'),
+          ),
+        ),
+      ],
     );
   }
 }

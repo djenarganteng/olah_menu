@@ -5,10 +5,25 @@ type AiRecipe = {
   title: string;
   description: string;
   cooking_time: number;
+  estimated_time: string;
+  difficulty: string;
   servings: number;
+  tips: string[];
+  main_ingredients: string[];
+  seasonings: string[];
   ingredients: string[];
+  step_details: AiRecipeStep[];
   steps: string[];
+  image_url: string | null;
+  image_prompt: string | null;
+  image_source: string;
   source: "cache" | "gemini";
+};
+
+type AiRecipeStep = {
+  step: number;
+  title: string;
+  description: string;
 };
 
 const geminiModel = Deno.env.get("GEMINI_MODEL") ?? "gemini-2.5-flash";
@@ -126,9 +141,18 @@ async function getCachedRecipe(
     title: String(row.title ?? ""),
     description: String(row.description ?? ""),
     cooking_time: Number(row.cooking_time ?? 0),
+    estimated_time: `${Number(row.cooking_time ?? 0) || 30} menit`,
+    difficulty: "Mudah",
     servings: Number(row.servings ?? 1),
+    tips: [],
+    main_ingredients: normalizeStringArray(row.ingredients_json),
+    seasonings: [],
     ingredients: normalizeStringArray(row.ingredients_json),
-    steps: normalizeStringArray(row.steps_json),
+    step_details: normalizeStepDetails(row.steps_json),
+    steps: normalizeStepStrings(row.steps_json),
+    image_url: null,
+    image_prompt: null,
+    image_source: "placeholder",
     source: "cache",
   };
 }
@@ -172,23 +196,41 @@ async function saveCachedRecipe(
 
   if (!response.ok) {
     console.warn("AI recipe cache save failed", await response.text());
-    return { ...recipe, id: crypto.randomUUID(), source: "gemini" };
+    return {
+      ...recipe,
+      id: crypto.randomUUID(),
+      source: "gemini",
+    };
   }
 
   const rows = await response.json();
   const row = Array.isArray(rows) ? rows[0] : null;
   if (!row) {
-    return { ...recipe, id: crypto.randomUUID(), source: "gemini" };
+    return {
+      ...recipe,
+      id: crypto.randomUUID(),
+      source: "gemini",
+    };
   }
 
   return {
+    ...recipe,
     id: String(row.id ?? crypto.randomUUID()),
     title: String(row.title ?? recipe.title),
     description: String(row.description ?? recipe.description),
     cooking_time: Number(row.cooking_time ?? recipe.cooking_time),
+    estimated_time: recipe.estimated_time,
+    difficulty: recipe.difficulty,
     servings: Number(row.servings ?? recipe.servings),
+    tips: recipe.tips,
+    main_ingredients: recipe.main_ingredients,
+    seasonings: recipe.seasonings,
     ingredients: normalizeStringArray(row.ingredients_json),
+    step_details: recipe.step_details,
     steps: normalizeStringArray(row.steps_json),
+    image_url: recipe.image_url,
+    image_prompt: recipe.image_prompt,
+    image_source: recipe.image_source,
     source: "gemini",
   };
 }
@@ -205,7 +247,7 @@ Gunakan sebanyak mungkin bahan yang tersedia.
 
 Tambahkan bumbu dapur umum jika diperlukan.
 
-Berikan resep yang realistis dan dapat dimasak di rumah.
+Berikan resep yang realistis, detail, dan dapat dimasak di rumah.
 
 Jawab HANYA dalam JSON valid tanpa markdown dan tanpa penjelasan tambahan.
 
@@ -215,9 +257,24 @@ Format JSON:
   "title": "",
   "description": "",
   "cooking_time": 0,
-  "servings": 0,
+  "estimated_time": "",
+  "difficulty": "",
+  "servings": 2,
+  "tips": [],
+  "main_ingredients": [],
+  "seasonings": [],
   "ingredients": [],
-  "steps": []
+  "step_details": [
+    {
+      "step": 1,
+      "title": "",
+      "description": ""
+    }
+  ],
+  "steps": [],
+  "image_url": null,
+  "image_prompt": null,
+  "image_source": "placeholder"
 }
 
 Bahan yang tersedia:
@@ -272,14 +329,57 @@ function validateRecipe(value: unknown): AiRecipe {
   }
 
   const map = value as Record<string, unknown>;
+  const cookingTime = positiveIntegerOrFallback(
+    map["cooking_time"] ?? map["waktu_memasak"],
+    30,
+  );
+  const mainIngredients = normalizeStringArray(
+    map["main_ingredients"] ?? map["bahan_utama"],
+  );
+  const seasonings = normalizeStringArray(
+    map["seasonings"] ?? map["bumbu_dan_pelengkap"],
+  );
+  const stepDetails = normalizeStepDetails(
+    map["step_details"] ?? map["langkah_memasak"],
+  );
+  const steps = normalizeStepStrings(map.steps, stepDetails);
+  const ingredients = normalizeStringArray(map.ingredients);
+  const normalizedIngredients = ingredients.length > 0
+    ? ingredients
+    : [...mainIngredients, ...seasonings];
+  const imageUrl = stringOrNull(map.image_url ?? map.imageUrl);
+  const imagePrompt = stringOrNull(map.image_prompt ?? map.imagePrompt);
+  const imageSource = stringOrFallback(
+    map["image_source"] ?? map["imageSource"],
+    imageUrl ? "generated" : "placeholder",
+  );
+  const estimatedTime = stringOrFallback(
+    map["estimated_time"] ?? map["estimasi_waktu"],
+    `${cookingTime} menit`,
+  );
   const recipe: AiRecipe = {
     id: "",
-    title: stringOrFallback(map.title, "Resep AI"),
-    description: stringOrFallback(map.description, ""),
-    cooking_time: positiveIntegerOrFallback(map.cooking_time, 30),
-    servings: positiveIntegerOrFallback(map.servings, 2),
-    ingredients: normalizeStringArray(map.ingredients),
-    steps: normalizeStringArray(map.steps),
+    title: stringOrFallback(map["title"] ?? map["nama_masakan"], "Resep AI"),
+    description: stringOrFallback(map["description"] ?? map["deskripsi"], ""),
+    cooking_time: cookingTime,
+    estimated_time: estimatedTime,
+    difficulty: stringOrFallback(
+      map["difficulty"] ?? map["tingkat_kesulitan"],
+      "Mudah",
+    ),
+    servings: positiveIntegerOrFallback(
+      map["servings"] ?? map["jumlah_porsi"],
+      2,
+    ),
+    tips: normalizeStringArray(map["tips"] ?? map["tips_memasak"]),
+    main_ingredients: mainIngredients,
+    seasonings,
+    ingredients: normalizedIngredients,
+    step_details: stepDetails,
+    steps,
+    image_url: imageUrl,
+    image_prompt: imagePrompt,
+    image_source: imageSource,
     source: "gemini",
   };
 
@@ -316,6 +416,145 @@ function normalizeStringArray(value: unknown): string[] {
     .filter((item) => item.length > 0);
 }
 
+function normalizeStepDetails(value: unknown): AiRecipeStep[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((item, index) => {
+      if (typeof item === "string") {
+        return parseStepFromText(item, index + 1);
+      }
+
+      if (!item || typeof item !== "object") {
+        return parseStepFromText(String(item), index + 1);
+      }
+
+      const map = item as Record<string, unknown>;
+      const fallbackStep = positiveIntegerOrFallback(map.step, index + 1);
+      return {
+        step: fallbackStep,
+        title: stringOrFallback(map.title ?? map.judul, `Langkah ${fallbackStep}`),
+        description: stringOrFallback(
+          map.description ?? map.deskripsi,
+          "",
+        ),
+      };
+    })
+    .filter((item) => item.title.length > 0 || item.description.length > 0)
+    .sort((a, b) => a.step - b.step);
+}
+
+function normalizeStepStrings(
+  value: unknown,
+  stepDetails: AiRecipeStep[] = [],
+): string[] {
+  if (!Array.isArray(value)) {
+    return stepDetails.map((step) => {
+      const title = step.title.trim();
+      const description = step.description.trim();
+      if (title.length === 0) {
+        return description;
+      }
+      if (description.length === 0) {
+        return title;
+      }
+      return `${title}: ${description}`;
+    });
+  }
+
+  const items = value
+    .map((item) => {
+      if (typeof item === "string") {
+        return item.trim();
+      }
+
+      if (!item || typeof item !== "object") {
+        return String(item).trim();
+      }
+
+      const map = item as Record<string, unknown>;
+      const title = stringOrFallback(map["title"] ?? map["judul"], "");
+      const description = stringOrFallback(
+        map["description"] ?? map["deskripsi"],
+        "",
+      );
+      if (title.length === 0) {
+        return description;
+      }
+      if (description.length === 0) {
+        return title;
+      }
+      return `${title}: ${description}`;
+    })
+    .filter((item) => item.length > 0);
+  if (items.length > 0) {
+    return items;
+  }
+
+  return stepDetails.map((step) => {
+    const title = step.title.trim();
+    const description = step.description.trim();
+    if (title.length === 0) {
+      return description;
+    }
+    if (description.length === 0) {
+      return title;
+    }
+    return `${title}: ${description}`;
+  });
+}
+
+function parseStepFromText(text: string, fallbackStep: number): AiRecipeStep {
+  const normalized = text.trim();
+  if (normalized.length === 0) {
+    return {
+      step: fallbackStep,
+      title: `Langkah ${fallbackStep}`,
+      description: "",
+    };
+  }
+
+  const numberedMatch = normalized.match(/^(?:Langkah\s*)?(\d+)[\.\:\-]\s*(.+)$/i);
+  if (numberedMatch) {
+    const step = positiveIntegerOrFallback(numberedMatch[1], fallbackStep);
+    return parseStepBody(numberedMatch[2] ?? normalized, step);
+  }
+
+  return parseStepBody(normalized, fallbackStep);
+}
+
+function parseStepBody(text: string, step: number): AiRecipeStep {
+  const normalized = text.trim();
+  const separators = [": ", " - ", " — ", " · "];
+
+  for (const separator of separators) {
+    const index = normalized.indexOf(separator);
+    if (index > 0) {
+      const title = normalized.slice(0, index).trim();
+      const description = normalized.slice(index + separator.length).trim();
+      if (title.length > 0 && description.length > 0) {
+        return { step, title, description };
+      }
+    }
+  }
+
+  if (normalized.length > 80) {
+    return {
+      step,
+      title: `Langkah ${step}`,
+      description: normalized,
+    };
+  }
+
+  return {
+    step,
+    title: normalized,
+    description: "",
+  };
+}
+
 function jsonResponse(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -324,4 +563,12 @@ function jsonResponse(body: unknown, status: number): Response {
       "Content-Type": "application/json",
     },
   });
+}
+
+function stringOrNull(value: unknown): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
 }

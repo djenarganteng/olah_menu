@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/ingredient.dart';
 import '../models/recipe.dart';
 import '../models/recipe_ingredient.dart';
+import '../providers/ingredient_provider.dart';
 import '../services/supabase_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/app_bottom_nav_bar.dart';
@@ -58,7 +60,7 @@ class _AllRecipesScreenState extends State<AllRecipesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEAF4E6),
+      backgroundColor: const Color(0xFFF9FBF8),
       extendBody: true,
       extendBodyBehindAppBar: true,
       appBar: const AppHeader(title: 'Daftar Resep'),
@@ -70,18 +72,28 @@ class _AllRecipesScreenState extends State<AllRecipesScreen> {
         children: [
           const Positioned.fill(
             child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFFE6F3E1), Color(0xFFF7FBF4)],
-                ),
-              ),
+              decoration: BoxDecoration(color: Color(0xFFF9FBF8)),
+            ),
+          ),
+          const Positioned(
+            left: -130,
+            top: -160,
+            child: _SoftBlob(
+              size: 320,
+              colors: [Color(0x66DFF2D8), Color(0x00DFF2D8)],
+            ),
+          ),
+          const Positioned(
+            right: -150,
+            bottom: -170,
+            child: _SoftBlob(
+              size: 360,
+              colors: [Color(0x66D7F0CC), Color(0x00D7F0CC)],
             ),
           ),
           Positioned.fill(
             child: Opacity(
-              opacity: 0.15,
+              opacity: 0.24,
               child: Image.asset(
                 'assets/backgrounds/favorites_bg.png',
                 fit: BoxFit.cover,
@@ -98,6 +110,8 @@ class _AllRecipesScreenState extends State<AllRecipesScreen> {
                 final recipes = data == null
                     ? const <Recipe>[]
                     : _filterRecipes(data.recipes, data.ingredientsMap);
+                final selectedIngredients =
+                    context.watch<IngredientProvider>().selectedIngredients;
 
                 return ListView(
                   padding: const EdgeInsets.fromLTRB(16, 103, 16, 20),
@@ -171,9 +185,18 @@ class _AllRecipesScreenState extends State<AllRecipesScreen> {
                         itemBuilder: (context, index) {
                           final recipe = recipes[index];
                           final count = data?.ingredientsMap[recipe.id]?.length ?? 0;
+                          final matchPercentage = data == null
+                              ? null
+                              : _RecipeMatch.calculate(
+                                  recipeIngredients:
+                                      data.ingredientsMap[recipe.id] ??
+                                      const <RecipeIngredient>[],
+                                  selectedIngredients: selectedIngredients,
+                                )?.percentage;
                           return RecipeSummaryCard(
                             recipe: recipe,
                             ingredientCount: count,
+                            matchPercentage: matchPercentage,
                             onTap: () {
                               Navigator.of(context).push(
                                 MaterialPageRoute<void>(
@@ -289,6 +312,57 @@ class _AllRecipesScreenState extends State<AllRecipesScreen> {
   }
 }
 
+class _RecipeMatch {
+  const _RecipeMatch._(this.percentage);
+
+  final int percentage;
+
+  static _RecipeMatch? calculate({
+    required List<RecipeIngredient> recipeIngredients,
+    required List<Ingredient> selectedIngredients,
+  }) {
+    if (recipeIngredients.isEmpty || selectedIngredients.isEmpty) {
+      return null;
+    }
+
+    final selectedIngredientIds = selectedIngredients.map((item) => item.id).toSet();
+    final selectedIngredientNames = selectedIngredients
+        .map((item) => item.name.trim().toLowerCase().replaceAll('pakcoy', 'pokcoy'))
+        .toSet();
+
+    bool isMatched(RecipeIngredient item) {
+      final ingredientName = item.ingredientName
+          ?.trim()
+          .toLowerCase()
+          .replaceAll('pakcoy', 'pokcoy');
+      return selectedIngredientIds.contains(item.ingredientId) ||
+          (ingredientName != null && selectedIngredientNames.contains(ingredientName));
+    }
+
+    final requiredIngredients = recipeIngredients.where((item) => item.isRequired).toList();
+    final optionalIngredients = recipeIngredients.where((item) => !item.isRequired).toList();
+    final matchedRequiredCount = requiredIngredients.where(isMatched).length;
+    final matchedOptionalCount = optionalIngredients.where(isMatched).length;
+    final matchedIngredientCount = matchedRequiredCount + matchedOptionalCount;
+
+    if (matchedIngredientCount == 0) {
+      return null;
+    }
+
+    final requiredScore = requiredIngredients.isEmpty
+        ? 1.0
+        : matchedRequiredCount / requiredIngredients.length;
+    final optionalScore = optionalIngredients.isEmpty
+        ? 1.0
+        : matchedOptionalCount / optionalIngredients.length;
+    final percentage = ((requiredScore * 0.7 + optionalScore * 0.3) * 100)
+        .round()
+        .clamp(0, 100);
+
+    return _RecipeMatch._(percentage);
+  }
+}
+
 class _RecipeCatalogData {
   const _RecipeCatalogData({
     required this.recipes,
@@ -297,6 +371,25 @@ class _RecipeCatalogData {
 
   final List<Recipe> recipes;
   final Map<int, List<RecipeIngredient>> ingredientsMap;
+}
+
+class _SoftBlob extends StatelessWidget {
+  const _SoftBlob({required this.size, required this.colors});
+
+  final double size;
+  final List<Color> colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(colors: colors),
+      ),
+    );
+  }
 }
 
 class _SearchField extends StatelessWidget {

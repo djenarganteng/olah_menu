@@ -172,11 +172,15 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                             ...aiFavorites.map(
                               (recipe) => AiRecipeCard(
                                 recipe: recipe,
+                                heroTag: 'ai-recipe-${recipe.id}',
                                 onTap: () {
                                   Navigator.of(context).push(
                                     MaterialPageRoute<void>(
                                       builder: (_) =>
-                                          RecipeDetailScreen.ai(recipe: recipe),
+                                          RecipeDetailScreen.ai(
+                                            recipe: recipe,
+                                            heroTag: 'ai-recipe-${recipe.id}',
+                                          ),
                                     ),
                                   );
                                 },

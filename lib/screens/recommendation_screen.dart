@@ -51,7 +51,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF6FAF7),
+      backgroundColor: const Color(0xFFF9FBF8),
       extendBodyBehindAppBar: true,
       appBar: const AppHeader(title: 'Hasil Resep'),
       bottomNavigationBar: AppBottomNavBar(
@@ -60,16 +60,20 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
       ),
       body: Stack(
         children: [
-          // Background: subtle botanical leaves matching Favorites
           const Positioned.fill(
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: Color(0xFFF6FAF7), // Soft minty base color
-                image: DecorationImage(
-                  image: AssetImage('assets/backgrounds/favorites_bg.png'),
-                  fit: BoxFit.cover,
-                  opacity: 0.12, // Very subtle, non-distracting
-                ),
+                color: Color(0xFFF9FBF8),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.16,
+              child: Image.asset(
+                'assets/backgrounds/favorites_bg.png',
+                fit: BoxFit.cover,
+                alignment: Alignment.topCenter,
               ),
             ),
           ),
@@ -132,11 +136,15 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
               aiProvider.recipe != null) {
             return AiRecipeCard(
               recipe: aiProvider.recipe!,
+              heroTag: 'ai-recipe-${aiProvider.recipe!.id}',
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
                     builder: (_) =>
-                        RecipeDetailScreen.ai(recipe: aiProvider.recipe!),
+                        RecipeDetailScreen.ai(
+                          recipe: aiProvider.recipe!,
+                          heroTag: 'ai-recipe-${aiProvider.recipe!.id}',
+                        ),
                   ),
                 );
               },

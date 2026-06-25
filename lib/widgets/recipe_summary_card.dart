@@ -11,11 +11,13 @@ class RecipeSummaryCard extends StatelessWidget {
     required this.recipe,
     required this.ingredientCount,
     required this.onTap,
+    this.matchPercentage,
   });
 
   final Recipe recipe;
   final int ingredientCount;
   final VoidCallback onTap;
+  final int? matchPercentage;
 
   @override
   Widget build(BuildContext context) {
@@ -56,10 +58,10 @@ class RecipeSummaryCard extends StatelessWidget {
                       },
                       heroTag: 'recipe-image-${recipe.id}',
                     ),
-                    Positioned(
-                      left: 14,
-                      bottom: 14,
-                      child: Container(
+                  Positioned(
+                    left: 14,
+                    bottom: 14,
+                    child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 10,
                           vertical: 6,
@@ -72,13 +74,17 @@ class RecipeSummaryCard extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             const Icon(
-                              Icons.restaurant_menu_rounded,
+                              Icons.auto_awesome_rounded,
                               size: 14,
                               color: AppColors.primary,
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              ingredientCount > 0
+                              matchPercentage != null
+                                  ? ingredientCount > 0
+                                      ? '$ingredientCount bahan · $matchPercentage% cocok'
+                                      : '$matchPercentage% cocok'
+                                  : ingredientCount > 0
                                   ? '$ingredientCount bahan'
                                   : 'Lihat detail',
                               style: Theme.of(context).textTheme.bodySmall
@@ -136,7 +142,11 @@ class RecipeSummaryCard extends StatelessWidget {
                       ),
                       _MetaPill(
                         icon: Icons.grid_view_rounded,
-                        label: ingredientCount > 0
+                        label: matchPercentage != null
+                            ? ingredientCount > 0
+                                  ? '$ingredientCount bahan · $matchPercentage%'
+                                  : '$matchPercentage%'
+                            : ingredientCount > 0
                             ? '$ingredientCount bahan'
                             : 'Detail',
                       ),

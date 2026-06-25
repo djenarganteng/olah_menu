@@ -35,7 +35,7 @@ class _AiRecipeSkeletonState extends State<AiRecipeSkeleton>
       builder: (context, _) {
         return Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(28),
@@ -44,57 +44,35 @@ class _AiRecipeSkeletonState extends State<AiRecipeSkeleton>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(
-                child: Text(
-                  '🤖 AI sedang membuat resep...',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.primaryDark,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
+              _ShimmerBox(
+                animationValue: _controller.value,
+                width: double.infinity,
+                height: 180,
+                radius: 24,
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 16),
               Row(
                 children: [
                   _ShimmerBox(
                     animationValue: _controller.value,
-                    width: 58,
-                    height: 58,
-                    radius: 18,
+                    width: 120,
+                    height: 26,
+                    radius: 999,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _ShimmerBox(
-                          animationValue: _controller.value,
-                          width: double.infinity,
-                          height: 16,
-                        ),
-                        const SizedBox(height: 10),
-                        _ShimmerBox(
-                          animationValue: _controller.value,
-                          width: 170,
-                          height: 14,
-                        ),
-                      ],
-                    ),
+                  const Spacer(),
+                  _ShimmerBox(
+                    animationValue: _controller.value,
+                    width: 72,
+                    height: 26,
+                    radius: 999,
                   ),
                 ],
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 14),
               _ShimmerBox(
                 animationValue: _controller.value,
                 width: double.infinity,
-                height: 14,
-              ),
-              const SizedBox(height: 10),
-              _ShimmerBox(
-                animationValue: _controller.value,
-                width: double.infinity,
-                height: 14,
+                height: 20,
               ),
               const SizedBox(height: 10),
               _ShimmerBox(
@@ -102,8 +80,10 @@ class _AiRecipeSkeletonState extends State<AiRecipeSkeleton>
                 width: 220,
                 height: 14,
               ),
-              const SizedBox(height: 18),
-              Row(
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   _ShimmerBox(
                     animationValue: _controller.value,
@@ -111,14 +91,33 @@ class _AiRecipeSkeletonState extends State<AiRecipeSkeleton>
                     height: 34,
                     radius: 999,
                   ),
-                  const SizedBox(width: 8),
                   _ShimmerBox(
                     animationValue: _controller.value,
                     width: 92,
                     height: 34,
                     radius: 999,
                   ),
+                  _ShimmerBox(
+                    animationValue: _controller.value,
+                    width: 110,
+                    height: 34,
+                    radius: 999,
+                  ),
                 ],
+              ),
+              const SizedBox(height: 16),
+              _ShimmerBox(
+                animationValue: _controller.value,
+                width: double.infinity,
+                height: 56,
+                radius: 20,
+              ),
+              const SizedBox(height: 10),
+              _ShimmerBox(
+                animationValue: _controller.value,
+                width: double.infinity,
+                height: 56,
+                radius: 20,
               ),
             ],
           ),

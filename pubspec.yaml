@@ -64,6 +64,7 @@ flutter:
   # Registrasi folder aset gambar bahan makanan untuk aplikasi OlahMenu
   assets:
     - assets/ingredients/
+    - assets/recipes/
     - assets/backgrounds/
     - assets/branding/
 

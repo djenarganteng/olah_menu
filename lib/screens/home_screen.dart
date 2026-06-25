@@ -9,6 +9,7 @@ import '../providers/ingredient_provider.dart';
 import '../services/supabase_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/app_bottom_nav_bar.dart';
+import '../widgets/app_header.dart';
 import '../widgets/local_favorites_store.dart';
 import '../widgets/recipe_visual.dart';
 import 'all_recipes_screen.dart';
@@ -53,7 +54,11 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFE9F4E6),
       extendBodyBehindAppBar: true,
-      appBar: _HomeHeader(onLogoutTap: _showLogoutConfirmation),
+      appBar: AppHeader(
+        title: 'OlahMenu',
+        showBackButton: false,
+        onLeadingTap: _showLogoutConfirmation,
+      ),
       bottomNavigationBar: AppBottomNavBar(
         currentIndex: 0,
         onSelected: (index) => _handleNavigation(context, index),
@@ -362,133 +367,6 @@ class _RecipeMatch {
 
 String _normalizeIngredientName(String value) {
   return value.trim().toLowerCase().replaceAll('pakcoy', 'pokcoy');
-}
-
-class _HomeHeader extends StatelessWidget implements PreferredSizeWidget {
-  const _HomeHeader({required this.onLogoutTap});
-
-  final VoidCallback onLogoutTap;
-
-  @override
-  Size get preferredSize => const Size.fromHeight(88);
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      bottom: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 10, 24, 8),
-        child: Container(
-          height: 62,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.96),
-            borderRadius: BorderRadius.circular(22),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x16000000),
-                blurRadius: 22,
-                offset: Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              _RoundIconButton(
-                icon: Icons.close_rounded,
-                onTap: onLogoutTap,
-                backgroundColor: const Color(0xFFF1F6EE),
-              ),
-              Expanded(
-                child: Text(
-                  'OlahMenu',
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: AppColors.primaryDark,
-                    fontFamily: 'serif',
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              const _HomeAvatar(),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _HomeAvatar extends StatelessWidget {
-  const _HomeAvatar();
-
-  @override
-  Widget build(BuildContext context) {
-    final imageUrl = context
-        .watch<AuthProvider>()
-        .user
-        ?.userMetadata?['avatar_url']
-        ?.toString();
-
-    return InkWell(
-      onTap: () => Navigator.of(context).pushNamed(ProfileScreen.routeName),
-      borderRadius: BorderRadius.circular(999),
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: AppColors.primarySoft,
-          border: Border.all(color: Colors.white, width: 2),
-          image: imageUrl == null || imageUrl.isEmpty
-              ? null
-              : DecorationImage(
-                  image: NetworkImage(imageUrl),
-                  fit: BoxFit.cover,
-                ),
-        ),
-        child: imageUrl == null || imageUrl.isEmpty
-            ? const Icon(
-                Icons.person_rounded,
-                size: 23,
-                color: AppColors.primaryDark,
-              )
-            : null,
-      ),
-    );
-  }
-}
-
-class _RoundIconButton extends StatelessWidget {
-  const _RoundIconButton({
-    required this.icon,
-    required this.onTap,
-    required this.backgroundColor,
-  });
-
-  final IconData icon;
-  final VoidCallback onTap;
-  final Color backgroundColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: backgroundColor,
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onTap,
-        child: SizedBox(
-          width: 46,
-          height: 46,
-          child: Icon(icon, size: 25, color: AppColors.primaryDark),
-        ),
-      ),
-    );
-  }
 }
 
 class _HeroBanner extends StatelessWidget {
