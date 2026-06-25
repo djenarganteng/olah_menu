@@ -45,13 +45,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               final horizontalPadding = constraints.maxWidth < 390
                   ? 20.0
                   : 30.0;
-              final topPadding = isVeryCompact
-                  ? 70.0
-                  : isCompact
-                  ? 90.0
-                  : 110.0;
-              final adjustedTopPadding =
-                  topPadding + (keyboardVisible ? 40.0 : 0.0);
               final cardHorizontalPadding = constraints.maxWidth < 390
                   ? 22.0
                   : 34.0;
@@ -59,222 +52,233 @@ class _RegisterScreenState extends State<RegisterScreen> {
               return Stack(
                 children: [
                   SingleChildScrollView(
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
                     padding: EdgeInsets.fromLTRB(
                       horizontalPadding,
-                      adjustedTopPadding,
+                      0,
                       horizontalPadding,
-                      32,
+                      keyboardVisible ? 8 : 32,
                     ),
-                    child: Align(
-                      alignment: Alignment.topCenter,
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 620),
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(19),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0x0F000000),
-                                blurRadius: 24,
-                                offset: Offset(0, 12),
-                              ),
-                            ],
-                          ),
-                          child: Padding(
-                            padding: EdgeInsets.fromLTRB(
-                              cardHorizontalPadding,
-                              isVeryCompact
-                                  ? 20
-                                  : isCompact
-                                  ? 28
-                                  : 34,
-                              cardHorizontalPadding,
-                              isVeryCompact
-                                  ? 20
-                                  : isCompact
-                                  ? 28
-                                  : 34,
-                            ),
-                            child: Form(
-                              key: _formKey,
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  if (!isVeryCompact) ...[
-                                    Center(
-                                      child: _BrandLogo(
-                                        size: isCompact ? 74 : 88,
-                                      ),
-                                    ),
-                                    SizedBox(height: isCompact ? 12 : 14),
-                                  ],
-                                  Text(
-                                    'Buat akun',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: Color(0xFF222222),
-                                      fontSize: isVeryCompact ? 26 : 30,
-                                      fontWeight: FontWeight.w800,
-                                      height: 1.12,
-                                    ),
-                                  ),
-                                  if (!isVeryCompact) ...[
-                                    SizedBox(height: isCompact ? 10 : 12),
-                                    Text(
-                                      'Daftar untuk mulai memakai\n'
-                                      'OlahMenu dengan aman.',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        color: Color(0xFF111111),
-                                        fontSize: isCompact ? 15 : 16,
-                                        fontWeight: FontWeight.w400,
-                                        height: 1.28,
-                                      ),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (keyboardVisible) const Spacer(flex: 2),
+                          Align(
+                            alignment: Alignment.topCenter,
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 620),
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(19),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Color(0x0F000000),
+                                      blurRadius: 24,
+                                      offset: Offset(0, 12),
                                     ),
                                   ],
-                                  SizedBox(
-                                    height: isVeryCompact
-                                        ? 14
+                                ),
+                                child: Padding(
+                                  padding: EdgeInsets.fromLTRB(
+                                    cardHorizontalPadding,
+                                    isVeryCompact
+                                        ? 20
                                         : isCompact
-                                        ? 22
-                                        : 26,
-                                  ),
-                                  TextFormField(
-                                    controller: _nameController,
-                                    textInputAction: TextInputAction.next,
-                                    style: _authFieldTextStyle,
-                                    decoration: _authInputDecoration(
-                                      hintText: 'Nama Lengkap',
-                                      icon: Icons.person_outline_rounded,
-                                      isDense: isVeryCompact,
-                                    ),
-                                    validator: (value) {
-                                      if ((value?.trim() ?? '').length < 2) {
-                                        return 'Nama lengkap wajib diisi.';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  SizedBox(
-                                    height: isVeryCompact
-                                        ? 8
+                                        ? 28
+                                        : 34,
+                                    cardHorizontalPadding,
+                                    isVeryCompact
+                                        ? 20
                                         : isCompact
-                                        ? 12
-                                        : 14,
+                                        ? 28
+                                        : 34,
                                   ),
-                                  TextFormField(
-                                    controller: _emailController,
-                                    keyboardType: TextInputType.emailAddress,
-                                    textInputAction: TextInputAction.next,
-                                    style: _authFieldTextStyle,
-                                    decoration: _authInputDecoration(
-                                      hintText: 'Email',
-                                      icon: Icons.mail_outline_rounded,
-                                      isDense: isVeryCompact,
-                                    ),
-                                    validator: _validateEmail,
-                                  ),
-                                  SizedBox(
-                                    height: isVeryCompact
-                                        ? 8
-                                        : isCompact
-                                        ? 12
-                                        : 14,
-                                  ),
-                                  TextFormField(
-                                    controller: _passwordController,
-                                    obscureText: _obscurePassword,
-                                    textInputAction: TextInputAction.next,
-                                    style: _authFieldTextStyle,
-                                    decoration: _authInputDecoration(
-                                      hintText: 'Password',
-                                      icon: Icons.lock_outline_rounded,
-                                      isDense: isVeryCompact,
-                                      suffixIcon: IconButton(
-                                        onPressed: () => setState(
-                                          () => _obscurePassword =
-                                              !_obscurePassword,
-                                        ),
-                                        icon: Icon(
-                                          _obscurePassword
-                                              ? Icons.visibility_outlined
-                                              : Icons.visibility_off_outlined,
-                                        ),
-                                      ),
-                                    ),
-                                    validator: (value) {
-                                      if ((value ?? '').length < 8) {
-                                        return 'Password minimal 8 karakter.';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  SizedBox(
-                                    height: isVeryCompact
-                                        ? 8
-                                        : isCompact
-                                        ? 12
-                                        : 14,
-                                  ),
-                                  TextFormField(
-                                    controller: _confirmPasswordController,
-                                    obscureText: _obscureConfirmPassword,
-                                    textInputAction: TextInputAction.done,
-                                    style: _authFieldTextStyle,
-                                    decoration: _authInputDecoration(
-                                      hintText: 'Konfirmasi Password',
-                                      icon: Icons.lock_outline_rounded,
-                                      isDense: isVeryCompact,
-                                      suffixIcon: IconButton(
-                                        onPressed: () => setState(
-                                          () => _obscureConfirmPassword =
-                                              !_obscureConfirmPassword,
-                                        ),
-                                        icon: Icon(
-                                          _obscureConfirmPassword
-                                              ? Icons.visibility_outlined
-                                              : Icons.visibility_off_outlined,
-                                        ),
-                                      ),
-                                    ),
-                                    validator: (value) {
-                                      if (value != _passwordController.text) {
-                                        return 'Konfirmasi password harus sama.';
-                                      }
-                                      return null;
-                                    },
-                                    onFieldSubmitted: (_) => _submit(),
-                                  ),
-                                  SizedBox(
-                                    height: isVeryCompact
-                                        ? 14
-                                        : isCompact
-                                        ? 22
-                                        : 26,
-                                  ),
-                                  FilledButton(
-                                    style: isVeryCompact
-                                        ? _authCompactPrimaryButtonStyle
-                                        : _authPrimaryButtonStyle,
-                                    onPressed: _isLoading ? null : _submit,
-                                    child: _isLoading
-                                        ? const SizedBox(
-                                            width: 22,
-                                            height: 22,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2.6,
-                                              color: Colors.white,
+                                  child: Form(
+                                    key: _formKey,
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                                      children: [
+                                        if (!isVeryCompact) ...[
+                                          Center(
+                                            child: _BrandLogo(
+                                              size: isCompact ? 74 : 88,
                                             ),
-                                          )
-                                        : const Text('Daftar'),
+                                          ),
+                                          SizedBox(height: isCompact ? 12 : 14),
+                                        ],
+                                        Text(
+                                          'Buat akun',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            color: Color(0xFF222222),
+                                            fontSize: isVeryCompact ? 26 : 30,
+                                            fontWeight: FontWeight.w800,
+                                            height: 1.12,
+                                          ),
+                                        ),
+                                        if (!isVeryCompact) ...[
+                                          SizedBox(height: isCompact ? 10 : 12),
+                                          Text(
+                                            'Daftar untuk mulai memakai\n'
+                                            'OlahMenu dengan aman.',
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              color: Color(0xFF111111),
+                                              fontSize: isCompact ? 15 : 16,
+                                              fontWeight: FontWeight.w400,
+                                              height: 1.28,
+                                            ),
+                                          ),
+                                        ],
+                                        SizedBox(
+                                          height: isVeryCompact
+                                              ? 14
+                                              : isCompact
+                                              ? 22
+                                              : 26,
+                                        ),
+                                        TextFormField(
+                                          controller: _nameController,
+                                          textInputAction: TextInputAction.next,
+                                          style: _authFieldTextStyle,
+                                          decoration: _authInputDecoration(
+                                            hintText: 'Nama Lengkap',
+                                            icon: Icons.person_outline_rounded,
+                                            isDense: isVeryCompact,
+                                          ),
+                                          validator: (value) {
+                                            if ((value?.trim() ?? '').length < 2) {
+                                              return 'Nama lengkap wajib diisi.';
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                        SizedBox(
+                                          height: isVeryCompact
+                                              ? 8
+                                              : isCompact
+                                              ? 12
+                                              : 14,
+                                        ),
+                                        TextFormField(
+                                          controller: _emailController,
+                                          keyboardType: TextInputType.emailAddress,
+                                          textInputAction: TextInputAction.next,
+                                          style: _authFieldTextStyle,
+                                          decoration: _authInputDecoration(
+                                            hintText: 'Email',
+                                            icon: Icons.mail_outline_rounded,
+                                            isDense: isVeryCompact,
+                                          ),
+                                          validator: _validateEmail,
+                                        ),
+                                        SizedBox(
+                                          height: isVeryCompact
+                                              ? 8
+                                              : isCompact
+                                              ? 12
+                                              : 14,
+                                        ),
+                                        TextFormField(
+                                          controller: _passwordController,
+                                          obscureText: _obscurePassword,
+                                          textInputAction: TextInputAction.next,
+                                          style: _authFieldTextStyle,
+                                          decoration: _authInputDecoration(
+                                            hintText: 'Password',
+                                            icon: Icons.lock_outline_rounded,
+                                            isDense: isVeryCompact,
+                                            suffixIcon: IconButton(
+                                              onPressed: () => setState(
+                                                () => _obscurePassword =
+                                                    !_obscurePassword,
+                                              ),
+                                              icon: Icon(
+                                                _obscurePassword
+                                                    ? Icons.visibility_outlined
+                                                    : Icons.visibility_off_outlined,
+                                              ),
+                                            ),
+                                          ),
+                                          validator: (value) {
+                                            if ((value ?? '').length < 8) {
+                                              return 'Password minimal 8 karakter.';
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                        SizedBox(
+                                          height: isVeryCompact
+                                              ? 8
+                                              : isCompact
+                                              ? 12
+                                              : 14,
+                                        ),
+                                        TextFormField(
+                                          controller: _confirmPasswordController,
+                                          obscureText: _obscureConfirmPassword,
+                                          textInputAction: TextInputAction.done,
+                                          style: _authFieldTextStyle,
+                                          decoration: _authInputDecoration(
+                                            hintText: 'Konfirmasi Password',
+                                            icon: Icons.lock_outline_rounded,
+                                            isDense: isVeryCompact,
+                                            suffixIcon: IconButton(
+                                              onPressed: () => setState(
+                                                () => _obscureConfirmPassword =
+                                                    !_obscureConfirmPassword,
+                                              ),
+                                              icon: Icon(
+                                                _obscureConfirmPassword
+                                                    ? Icons.visibility_outlined
+                                                    : Icons.visibility_off_outlined,
+                                              ),
+                                            ),
+                                          ),
+                                          validator: (value) {
+                                            if (value != _passwordController.text) {
+                                              return 'Konfirmasi password harus sama.';
+                                            }
+                                            return null;
+                                          },
+                                          onFieldSubmitted: (_) => _submit(),
+                                        ),
+                                        SizedBox(
+                                          height: isVeryCompact
+                                              ? 14
+                                              : isCompact
+                                              ? 22
+                                              : 26,
+                                        ),
+                                        FilledButton(
+                                          style: isVeryCompact
+                                              ? _authCompactPrimaryButtonStyle
+                                              : _authPrimaryButtonStyle,
+                                          onPressed: _isLoading ? null : _submit,
+                                          child: _isLoading
+                                              ? const SizedBox(
+                                                  width: 22,
+                                                  height: 22,
+                                                  child: CircularProgressIndicator(
+                                                    strokeWidth: 2.6,
+                                                    color: Colors.white,
+                                                  ),
+                                                )
+                                              : const Text('Daftar'),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ],
+                                ),
                               ),
                             ),
                           ),
-                        ),
+                        ],
                       ),
                     ),
                   ),

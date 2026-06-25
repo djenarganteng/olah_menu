@@ -50,22 +50,25 @@ class _LoginScreenState extends State<LoginScreen> {
                   : 56.0;
 
               return SingleChildScrollView(
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
                 padding: EdgeInsets.fromLTRB(
                   horizontalPadding,
                   0,
                   horizontalPadding,
-                  32,
+                  keyboardVisible ? 8 : 32,
                 ),
                 child: ConstrainedBox(
                   constraints: BoxConstraints(minHeight: constraints.maxHeight),
                   child: Column(
-                    mainAxisAlignment: keyboardVisible
-                        ? MainAxisAlignment.center
-                        : MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      if (keyboardVisible) const Spacer(),
                       Padding(
-                        padding: EdgeInsets.only(top: keyboardVisible ? 0 : topPadding),
+                        padding: EdgeInsets.only(
+                          top: keyboardVisible ? 0 : topPadding,
+                          bottom: keyboardVisible ? 8 : 32,
+                        ),
                         child: Align(
                           alignment: Alignment.topCenter,
                           child: ConstrainedBox(
