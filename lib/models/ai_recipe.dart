@@ -19,6 +19,7 @@ class AiRecipe {
     this.imageUrl,
     this.imagePrompt,
     this.imageSource,
+    this.aiNote,
     this.isAiGenerated = true,
   });
 
@@ -39,6 +40,7 @@ class AiRecipe {
   final String? imageUrl;
   final String? imagePrompt;
   final String? imageSource;
+  final String? aiNote;
   final bool isAiGenerated;
 
   factory AiRecipe.fromMap(Map<String, dynamic> map) {
@@ -82,6 +84,9 @@ class AiRecipe {
       _valueFor(map, ['image_source', 'imageSource']),
       fallback: imageUrl == null ? 'placeholder' : 'generated',
     );
+    final aiNote = _stringOrNull(
+      _valueFor(map, ['ai_note', 'aiNote', 'catatan_ai', 'notes', 'note']),
+    );
 
     return AiRecipe(
       id: _stringValue(_valueFor(map, ['id']), fallback: ''),
@@ -107,15 +112,31 @@ class AiRecipe {
       imageUrl: imageUrl,
       imagePrompt: imagePrompt,
       imageSource: imageSource,
+      aiNote: aiNote,
     );
   }
 
+  String get aiBadgeLabel => '\u{1F916} Dibuat oleh AI';
+
   String get sourceBadgeLabel =>
-      source == 'cache' ? '⚡ Dari Cache' : '🤖 Dibuat oleh AI';
+      source == 'cache' ? '\u{26A1} Dari Cache' : aiBadgeLabel;
+
+  String get aiDisclosureText {
+    final note = aiNote?.trim();
+    if (note != null && note.isNotEmpty) {
+      return note;
+    }
+
+    return 'Resep ini dihasilkan AI berdasarkan bahan yang kamu pilih. '
+        'Hasilnya bisa sedikit berbeda dari resep tradisional.';
+  }
 
   bool get hasDetailedSteps =>
       stepDetails.isNotEmpty &&
-      stepDetails.any((step) => step.title.trim().isNotEmpty || step.description.trim().isNotEmpty);
+      stepDetails.any(
+        (step) =>
+            step.title.trim().isNotEmpty || step.description.trim().isNotEmpty,
+      );
 
   bool get hasStructuredIngredients =>
       mainIngredients.isNotEmpty || seasonings.isNotEmpty;
@@ -138,6 +159,7 @@ class AiRecipe {
       'image_url': imageUrl,
       'image_prompt': imagePrompt,
       'image_source': imageSource,
+      'ai_note': aiNote,
       'source': source,
       'is_ai_generated': isAiGenerated,
     };

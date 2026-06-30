@@ -387,7 +387,20 @@ class _AiRecipeDetailView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasStructuredIngredients = recipe.hasStructuredIngredients;
-    final stepDetails = recipe.stepDetails;
+    final sortedSteps = recipe.stepDetails.isNotEmpty
+        ? ([...recipe.stepDetails]
+          ..sort((a, b) => a.step.compareTo(b.step)))
+        : recipe.steps
+            .asMap()
+            .entries
+            .map(
+              (entry) => AiRecipeStep(
+                step: entry.key + 1,
+                title: 'Langkah ${entry.key + 1}',
+                description: entry.value,
+              ),
+            )
+            .toList();
 
     return Scaffold(
       appBar: AppHeader(title: recipe.title),
@@ -419,7 +432,19 @@ class _AiRecipeDetailView extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _AiDetailBadge(text: recipe.sourceBadgeLabel),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _AiDetailBadge(text: recipe.aiBadgeLabel),
+                      if (recipe.source == 'cache')
+                        _AiDetailBadge(
+                          text: recipe.sourceBadgeLabel,
+                          accentColor: Color(0xFFB97817),
+                          backgroundColor: Color(0xFFFFF4D7),
+                        ),
+                    ],
+                  ),
                   const SizedBox(height: 14),
                   Text(
                     recipe.title,
@@ -459,6 +484,37 @@ class _AiRecipeDetailView extends StatelessWidget {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 14),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: AppColors.backgroundSoft,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(
+                          Icons.auto_awesome_rounded,
+                          size: 18,
+                          color: AppColors.primary,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            recipe.aiDisclosureText,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: AppColors.text,
+                                  height: 1.45,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 16),
                   ValueListenableBuilder<List<AiRecipe>>(
                     valueListenable: LocalFavoritesStore.aiFavorites,
@@ -490,36 +546,6 @@ class _AiRecipeDetailView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 18),
-            if (recipe.tips.isNotEmpty) ...[
-              SectionTitle(
-                title: 'Tips Memasak',
-                subtitle: 'Catatan singkat agar hasil masakan lebih stabil.',
-                compact: true,
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Column(
-                  children: recipe.tips
-                      .asMap()
-                      .entries
-                      .map(
-                        (entry) => _TipTile(
-                          number: entry.key + 1,
-                          text: entry.value,
-                          isLast: entry.key == recipe.tips.length - 1,
-                        ),
-                      )
-                      .toList(),
-                ),
-              ),
-              const SizedBox(height: 18),
-            ],
             SectionTitle(
               title: 'Bahan',
               subtitle: hasStructuredIngredients
@@ -583,24 +609,70 @@ class _AiRecipeDetailView extends StatelessWidget {
               compact: true,
             ),
             const SizedBox(height: 12),
-            if (stepDetails.isNotEmpty)
-              ...stepDetails.asMap().entries.map(
+            if (sortedSteps.isNotEmpty)
+              ...sortedSteps.asMap().entries.map(
                 (entry) => _AiStepTile(
                   step: entry.value,
-                  isLast: entry.key == stepDetails.length - 1,
-                ),
-              )
-            else
-              ...recipe.steps.asMap().entries.map(
-                (entry) => _AiStepTile(
-                  step: AiRecipeStep(
-                    step: entry.key + 1,
-                    title: 'Langkah ${entry.key + 1}',
-                    description: entry.value,
-                  ),
-                  isLast: entry.key == recipe.steps.length - 1,
+                  isLast: entry.key == sortedSteps.length - 1,
                 ),
               ),
+            if (recipe.tips.isNotEmpty) ...[
+              const SizedBox(height: 20),
+              SectionTitle(
+                title: 'Tips Memasak',
+                subtitle: 'Catatan singkat agar hasil masakan lebih stabil.',
+                compact: true,
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Column(
+                  children: recipe.tips
+                      .asMap()
+                      .entries
+                      .map(
+                        (entry) => _TipTile(
+                          number: entry.key + 1,
+                          text: entry.value,
+                          isLast: entry.key == recipe.tips.length - 1,
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
+            ],
+            const SizedBox(height: 18),
+            const SectionTitle(
+              title: 'Catatan AI',
+              subtitle: 'Informasi tambahan agar kamu memahami hasil resep AI.',
+              compact: true,
+            ),
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [AppColors.primarySoft, Colors.white],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Text(
+                recipe.aiDisclosureText,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.text,
+                  height: 1.5,
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -609,23 +681,29 @@ class _AiRecipeDetailView extends StatelessWidget {
 }
 
 class _AiDetailBadge extends StatelessWidget {
-  const _AiDetailBadge({required this.text});
+  const _AiDetailBadge({
+    required this.text,
+    this.accentColor = AppColors.primary,
+    this.backgroundColor = const Color(0xFFFFF3D8),
+  });
 
   final String text;
+  final Color accentColor;
+  final Color backgroundColor;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF3D8),
+        color: backgroundColor,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: AppColors.accent.withValues(alpha: 0.35)),
+        border: Border.all(color: accentColor.withValues(alpha: 0.28)),
       ),
       child: Text(
         text,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: const Color(0xFF8A5A18),
+          color: accentColor,
           fontWeight: FontWeight.w800,
         ),
       ),

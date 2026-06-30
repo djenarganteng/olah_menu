@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../models/ai_recipe.dart';
 import '../theme/app_colors.dart';
-import 'local_favorites_store.dart';
 import 'ai_recipe_visual.dart';
+import 'local_favorites_store.dart';
 
 class AiRecipeCard extends StatelessWidget {
   const AiRecipeCard({
@@ -46,7 +46,7 @@ class AiRecipeCard extends StatelessWidget {
 
                 return AiRecipeVisual(
                   recipe: recipe,
-                  height: 176,
+                  height: 188,
                   borderRadius: 28,
                   heroTag: heroTag ?? 'ai-recipe-${recipe.id}',
                   showFavoriteAction: true,
@@ -58,7 +58,7 @@ class AiRecipeCard extends StatelessWidget {
               },
             ),
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
               child: _AiBody(
                 recipe: recipe,
                 onTap: onTap,
@@ -79,28 +79,58 @@ class _AiBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final description = recipe.description.isEmpty
+        ? 'Resep rumahan yang dibuat dari bahan pilihanmu.'
+        : recipe.description;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _Badge(
+              icon: Icons.smart_toy_rounded,
+              label: recipe.aiBadgeLabel,
+            ),
+            if (recipe.source == 'cache')
+              _Badge(
+                icon: Icons.cached_rounded,
+                label: recipe.sourceBadgeLabel,
+                subtle: true,
+              ),
+          ],
+        ),
+        const SizedBox(height: 12),
         Text(
           recipe.title,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w800,
-            letterSpacing: -0.2,
+            letterSpacing: -0.25,
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          recipe.description.isEmpty
-              ? 'Resep rumahan yang dibuat dari bahan pilihanmu.'
-              : recipe.description,
+          description,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             color: AppColors.textSoft,
             height: 1.45,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          recipe.aiDisclosureText,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: AppColors.textSoft,
+            height: 1.35,
+            fontStyle: FontStyle.italic,
           ),
         ),
         const SizedBox(height: 14),
@@ -165,6 +195,50 @@ class _AiBody extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _Badge extends StatelessWidget {
+  const _Badge({
+    required this.icon,
+    required this.label,
+    this.subtle = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool subtle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+      decoration: BoxDecoration(
+        color: subtle ? AppColors.backgroundSoft : AppColors.primarySoft,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: subtle ? AppColors.border : AppColors.primary.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 14,
+            color: subtle ? AppColors.primaryDark : AppColors.primary,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: subtle ? AppColors.text : AppColors.primaryDark,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

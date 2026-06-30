@@ -192,8 +192,8 @@ class IngredientProvider extends ChangeNotifier {
       final matchesCategory =
           _selectedCategory == 'Semua' ||
           ingredient.category == _selectedCategory;
-      final matchesSearch = ingredient.name.toLowerCase().contains(
-        _searchQuery.trim().toLowerCase(),
+      final matchesSearch = Ingredient.normalizeKey(ingredient.name).contains(
+        Ingredient.normalizeKey(_searchQuery),
       );
       return matchesCategory && matchesSearch;
     }).toList();
@@ -213,7 +213,7 @@ class IngredientProvider extends ChangeNotifier {
       
       final Map<String, Ingredient> uniqueMap = {};
       for (final item in fetched) {
-        final key = item.name.toLowerCase().replaceAll('pakcoy', 'pokcoy');
+        final key = Ingredient.normalizeKey(item.name);
         if (!uniqueMap.containsKey(key)) {
           uniqueMap[key] = item;
         } else {
@@ -235,6 +235,42 @@ class IngredientProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<Ingredient> addIngredient({
+    required String name,
+    required String category,
+  }) async {
+    final normalizedName = Ingredient.toTitleCase(name);
+    final normalizedCategory = Ingredient.toTitleCase(category);
+
+    if (normalizedName.isEmpty) {
+      throw const IngredientValidationException('Nama bahan wajib diisi.');
+    }
+
+    if (normalizedCategory.isEmpty) {
+      throw const IngredientValidationException('Kategori bahan wajib dipilih.');
+    }
+
+    final created = await supabaseService.createIngredient(
+      name: normalizedName,
+      category: normalizedCategory,
+    );
+
+    await loadIngredients();
+
+    final exists = _ingredients.any((ingredient) => ingredient.id == created.id);
+    if (!exists) {
+      _ingredients = [..._ingredients, created]
+        ..sort((a, b) => a.name.compareTo(b.name));
+    }
+
+    _selectedIngredientIds.add(created.id);
+    _searchQuery = created.name;
+    _selectedCategory = created.category;
+    notifyListeners();
+
+    return created;
   }
 
   void toggleSelection(Ingredient ingredient) {
