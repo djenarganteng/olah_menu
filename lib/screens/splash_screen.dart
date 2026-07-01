@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../services/onboarding_service.dart';
 import '../theme/app_colors.dart';
 import 'auth/auth_gate.dart';
+import 'onboarding/onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -29,15 +31,22 @@ class _SplashScreenState extends State<SplashScreen>
       CurvedAnimation(parent: _logoPulseController, curve: Curves.easeInOut),
     );
 
-    _timer = Timer(const Duration(seconds: 2), () {
-      if (!mounted) {
-        return;
-      }
+    _timer = Timer(const Duration(seconds: 2), _redirectAfterSplash);
+  }
 
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute<void>(builder: (_) => const AuthGate()),
-      );
-    });
+  Future<void> _redirectAfterSplash() async {
+    final onboardingCompleted = await OnboardingService.isCompleted();
+
+    if (!mounted) {
+      return;
+    }
+
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(
+        builder: (_) =>
+            onboardingCompleted ? const AuthGate() : const OnboardingScreen(),
+      ),
+    );
   }
 
   @override
