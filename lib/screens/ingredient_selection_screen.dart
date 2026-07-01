@@ -134,29 +134,32 @@ class _IngredientSelectionScreenState extends State<IngredientSelectionScreen> {
                     const SizedBox(height: 12),
                     Align(
                       alignment: Alignment.centerLeft,
-                      child: TextButton.icon(
-                        onPressed: () {
-                          final defaultNames = {
-                            'Garam',
-                            'Minyak Goreng',
-                            'Bawang Merah',
-                            'Bawang Putih',
-                            'Kecap',
-                          };
-                          bool added = false;
-                          for (final ingredient in provider.ingredients) {
-                            if (defaultNames.contains(ingredient.name) &&
-                                !provider.isSelected(ingredient.id)) {
-                              provider.toggleSelection(ingredient);
-                              added = true;
-                            }
-                          }
-                          if (added) {
-                            HapticFeedback.mediumImpact();
-                          }
-                        },
-                        icon: const Icon(Icons.auto_awesome_rounded, size: 18),
-                        label: const Text('Tambah bumbu dasar'),
+                      child: FilledButton.icon(
+                        onPressed: () => _showAddIngredientSheet(
+                          context,
+                          provider,
+                          initialName: _searchController.text.trim(),
+                        ),
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size(0, 36),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 0,
+                          ),
+                          shape: const StadiumBorder(),
+                          elevation: 2,
+                          shadowColor: AppColors.primary.withValues(
+                            alpha: 0.22,
+                          ),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          visualDensity: VisualDensity.compact,
+                          textStyle: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        icon: const Icon(Icons.add_circle_rounded, size: 16),
+                        label: const Text('Tambah Bahan'),
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -315,6 +318,7 @@ class _IngredientSelectionScreenState extends State<IngredientSelectionScreen> {
       const SnackBar(content: Text('Bahan berhasil ditambahkan.')),
     );
   }
+
 }
 
 class _BottomSelectionBar extends StatelessWidget {

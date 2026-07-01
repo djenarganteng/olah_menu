@@ -1,6 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Internet untuk Supabase & Gemini -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
-        android:label="olah_menu"
+        android:label="Olah Menu"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

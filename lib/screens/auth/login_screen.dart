@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_text_styles.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -88,15 +89,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                   Text(
                                     'Masuk ke OlahMenu',
                                     textAlign: TextAlign.center,
-                                    style: TextStyle(
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.headlineMedium?.copyWith(
                                       color: Color(0xFF050505),
-                                      fontFamily: 'serif',
                                       fontSize: isVeryCompact
                                           ? 26
                                           : isCompact
                                           ? 30
                                           : 34,
-                                      fontWeight: FontWeight.w400,
                                       height: 1.08,
                                     ),
                                   ),
@@ -106,7 +107,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                       'Lanjutkan untuk menyimpan resep\n'
                                       'dan bahan favoritmu.',
                                       textAlign: TextAlign.center,
-                                      style: TextStyle(
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodyLarge?.copyWith(
                                         color: Color(0xFF111111),
                                         fontSize: isCompact ? 16 : 18,
                                         fontWeight: FontWeight.w400,
@@ -372,10 +375,9 @@ class _BrandLogo extends StatelessWidget {
   }
 }
 
-const TextStyle _authFieldTextStyle = TextStyle(
-  color: Color(0xFF4C5052),
+final TextStyle _authFieldTextStyle = AppTextStyles.bodyText.copyWith(
   fontSize: 17,
-  fontWeight: FontWeight.w400,
+  color: const Color(0xFF4C5052),
 );
 
 final ButtonStyle _authPrimaryButtonStyle = FilledButton.styleFrom(
@@ -384,7 +386,7 @@ final ButtonStyle _authPrimaryButtonStyle = FilledButton.styleFrom(
   foregroundColor: Colors.white,
   minimumSize: const Size.fromHeight(56),
   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(34)),
-  textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+  textStyle: AppTextStyles.buttonText.copyWith(color: Colors.white),
 );
 
 final ButtonStyle _authCompactPrimaryButtonStyle = FilledButton.styleFrom(
@@ -393,13 +395,13 @@ final ButtonStyle _authCompactPrimaryButtonStyle = FilledButton.styleFrom(
   foregroundColor: Colors.white,
   minimumSize: const Size.fromHeight(48),
   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-  textStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+  textStyle: AppTextStyles.buttonText.copyWith(color: Colors.white),
 );
 
 final ButtonStyle _authLinkButtonStyle = TextButton.styleFrom(
   foregroundColor: const Color(0xFF2F7B37),
   disabledForegroundColor: const Color(0xFF8BA98E),
-  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
+  textStyle: AppTextStyles.bodyText.copyWith(fontSize: 16),
 );
 
 InputDecoration _authInputDecoration({
@@ -421,11 +423,7 @@ InputDecoration _authInputDecoration({
       horizontal: 18,
       vertical: isDense ? 12 : 16,
     ),
-    hintStyle: const TextStyle(
-      color: Color(0xFF8B8F94),
-      fontSize: 17,
-      fontWeight: FontWeight.w400,
-    ),
+    hintStyle: AppTextStyles.hintText.copyWith(fontSize: 17),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(19),
       borderSide: const BorderSide(color: Color(0xFFD9DEE1)),

@@ -26,7 +26,9 @@ type AiRecipeStep = {
   description: string;
 };
 
-const geminiModel = Deno.env.get("GEMINI_MODEL") ?? "gemini-2.5-flash";
+const geminiModel = Deno.env.get("GEMINI_MODEL") ?? "gemini-2.5-pro";
+const geminiFallbackModel =
+  Deno.env.get("GEMINI_FALLBACK_MODEL") ?? "gemini-2.5-flash";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -280,8 +282,34 @@ Format JSON:
 Bahan yang tersedia:
 ${ingredients.map((item) => `- ${item}`).join("\n")}`;
 
+  const modelCandidates = [geminiModel, geminiFallbackModel].filter(
+    (model, index, models) => model.length > 0 && models.indexOf(model) === index,
+  );
+  const errors: string[] = [];
+
+  for (const model of modelCandidates) {
+    try {
+      console.info(`Generating AI recipe with Gemini model: ${model}`);
+      return await generateRecipeWithModel(apiKey, prompt, model);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      errors.push(`${model}: ${message}`);
+      console.warn(`Gemini model ${model} failed`, message);
+    }
+  }
+
+  throw new Error(
+    `All Gemini models failed: ${errors.join(" | ") || "unknown error"}`,
+  );
+}
+
+async function generateRecipeWithModel(
+  apiKey: string,
+  prompt: string,
+  model: string,
+): Promise<AiRecipe> {
   const url =
-    `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`;
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

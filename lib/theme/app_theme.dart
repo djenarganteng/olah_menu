@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
+import 'app_text_styles.dart';
 
 class AppTheme {
   const AppTheme._();
@@ -20,38 +21,20 @@ class AppTheme {
       scaffoldBackgroundColor: AppColors.background,
       canvasColor: AppColors.background,
       splashFactory: InkSparkle.splashFactory,
-      textTheme: const TextTheme(
-        headlineSmall: TextStyle(
-          fontSize: 34,
-          height: 1.12,
-          fontWeight: FontWeight.w800,
-          color: AppColors.text,
-        ),
-        titleLarge: TextStyle(
-          fontSize: 24,
-          height: 1.2,
-          fontWeight: FontWeight.w800,
-          color: AppColors.text,
-        ),
-        titleMedium: TextStyle(
-          fontSize: 18,
-          height: 1.25,
-          fontWeight: FontWeight.w700,
-          color: AppColors.text,
-        ),
-        titleSmall: TextStyle(
-          fontSize: 15,
-          height: 1.25,
-          fontWeight: FontWeight.w700,
-          color: AppColors.text,
-        ),
-        bodyLarge: TextStyle(fontSize: 16, height: 1.55, color: AppColors.text),
-        bodyMedium: TextStyle(fontSize: 14, height: 1.5, color: AppColors.text),
-        bodySmall: TextStyle(
-          fontSize: 12,
-          height: 1.45,
-          color: AppColors.textSoft,
-        ),
+      textTheme: TextTheme(
+        displayLarge: AppTextStyles.splashTitle,
+        headlineLarge: AppTextStyles.onboardingTitle,
+        headlineMedium: AppTextStyles.pageTitle,
+        headlineSmall: AppTextStyles.pageTitle,
+        titleLarge: AppTextStyles.sectionTitle,
+        titleMedium: AppTextStyles.cardTitle,
+        titleSmall: AppTextStyles.buttonText,
+        bodyLarge: AppTextStyles.bodyText,
+        bodyMedium: AppTextStyles.description,
+        bodySmall: AppTextStyles.caption,
+        labelLarge: AppTextStyles.buttonText,
+        labelMedium: AppTextStyles.caption,
+        labelSmall: AppTextStyles.smallText,
       ),
       iconTheme: const IconThemeData(color: AppColors.primaryDark),
       appBarTheme: const AppBarTheme(
@@ -75,11 +58,11 @@ class AppTheme {
         side: const BorderSide(color: AppColors.border),
         selectedColor: AppColors.primary,
         backgroundColor: AppColors.backgroundSoft,
-        labelStyle: const TextStyle(
+        labelStyle: AppTextStyles.caption.copyWith(
           fontWeight: FontWeight.w600,
           color: AppColors.text,
         ),
-        secondaryLabelStyle: const TextStyle(
+        secondaryLabelStyle: AppTextStyles.caption.copyWith(
           fontWeight: FontWeight.w700,
           color: Colors.white,
         ),
@@ -93,7 +76,12 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          textStyle: AppTextStyles.buttonText.copyWith(color: Colors.white),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          textStyle: AppTextStyles.buttonText,
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -103,7 +91,7 @@ class AppTheme {
           horizontal: 18,
           vertical: 16,
         ),
-        hintStyle: const TextStyle(color: AppColors.textSoft),
+        hintStyle: AppTextStyles.hintText,
         prefixIconColor: AppColors.textSoft,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
@@ -122,7 +110,7 @@ class AppTheme {
         behavior: SnackBarBehavior.floating,
         backgroundColor: AppColors.text,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        contentTextStyle: const TextStyle(color: Colors.white),
+        contentTextStyle: AppTextStyles.bodyText.copyWith(color: Colors.white),
       ),
       progressIndicatorTheme: const ProgressIndicatorThemeData(
         color: AppColors.primary,

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../providers/auth_provider.dart';
+import '../../theme/app_text_styles.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -114,10 +115,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                         Text(
                                           'Buat akun',
                                           textAlign: TextAlign.center,
-                                          style: TextStyle(
+                                          style: Theme.of(
+                                            context,
+                                          ).textTheme.headlineMedium?.copyWith(
                                             color: Color(0xFF222222),
                                             fontSize: isVeryCompact ? 26 : 30,
-                                            fontWeight: FontWeight.w800,
                                             height: 1.12,
                                           ),
                                         ),
@@ -127,7 +129,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                             'Daftar untuk mulai memakai\n'
                                             'OlahMenu dengan aman.',
                                             textAlign: TextAlign.center,
-                                            style: TextStyle(
+                                            style: Theme.of(
+                                              context,
+                                            ).textTheme.bodyLarge?.copyWith(
                                               color: Color(0xFF111111),
                                               fontSize: isCompact ? 15 : 16,
                                               fontWeight: FontWeight.w400,
@@ -412,10 +416,9 @@ class _BrandLogo extends StatelessWidget {
   }
 }
 
-const TextStyle _authFieldTextStyle = TextStyle(
-  color: Color(0xFF4C5052),
+final TextStyle _authFieldTextStyle = AppTextStyles.bodyText.copyWith(
   fontSize: 17,
-  fontWeight: FontWeight.w400,
+  color: const Color(0xFF4C5052),
 );
 
 final ButtonStyle _authPrimaryButtonStyle = FilledButton.styleFrom(
@@ -424,7 +427,7 @@ final ButtonStyle _authPrimaryButtonStyle = FilledButton.styleFrom(
   foregroundColor: Colors.white,
   minimumSize: const Size.fromHeight(56),
   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(34)),
-  textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+  textStyle: AppTextStyles.buttonText.copyWith(color: Colors.white),
 );
 
 final ButtonStyle _authCompactPrimaryButtonStyle = FilledButton.styleFrom(
@@ -433,7 +436,7 @@ final ButtonStyle _authCompactPrimaryButtonStyle = FilledButton.styleFrom(
   foregroundColor: Colors.white,
   minimumSize: const Size.fromHeight(48),
   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-  textStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+  textStyle: AppTextStyles.buttonText.copyWith(color: Colors.white),
 );
 
 InputDecoration _authInputDecoration({
@@ -455,11 +458,7 @@ InputDecoration _authInputDecoration({
       horizontal: 18,
       vertical: isDense ? 12 : 16,
     ),
-    hintStyle: const TextStyle(
-      color: Color(0xFF575B5F),
-      fontSize: 17,
-      fontWeight: FontWeight.w400,
-    ),
+    hintStyle: AppTextStyles.hintText.copyWith(fontSize: 17),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
       borderSide: BorderSide.none,

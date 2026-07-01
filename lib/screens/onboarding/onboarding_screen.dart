@@ -174,16 +174,13 @@ class _OnboardingPageContent extends StatelessWidget {
         ? math.min(maxHeroWidth, availableHeight * 0.38)
         : math.min(maxHeroWidth, availableHeight * 0.34);
 
-    final titleStyle = Theme.of(context).textTheme.headlineSmall?.copyWith(
+    final titleStyle = Theme.of(context).textTheme.headlineLarge?.copyWith(
       color: page.accentColor,
-      fontFamily: 'Plus Jakarta Sans',
-      fontWeight: FontWeight.w800,
-      letterSpacing: -0.8,
-      height: 1.12,
+      fontWeight: FontWeight.w700,
+      letterSpacing: -0.6,
     );
-    final bodyStyle = Theme.of(context).textTheme.bodyLarge?.copyWith(
+    final bodyStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
       color: const Color(0xFF555A52),
-      fontFamily: 'Inter',
       height: 1.65,
     );
 
@@ -427,11 +424,6 @@ class _OnboardingBottomRow extends StatelessWidget {
                   style: TextButton.styleFrom(
                     foregroundColor: AppColors.primaryDark,
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                    textStyle: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      fontFamily: 'Inter',
-                    ),
                   ),
                   child: const Text('Lewati'),
                 ),
@@ -456,14 +448,7 @@ class _OnboardingBottomRow extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      page.buttonLabel,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        fontFamily: 'Inter',
-                      ),
-                    ),
+                    Text(page.buttonLabel),
                     const SizedBox(width: 6),
                     const Icon(
                       Icons.arrow_forward_rounded,
