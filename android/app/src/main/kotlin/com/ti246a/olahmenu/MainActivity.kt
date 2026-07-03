@@ -1,4 +1,4 @@
-package com.ti246a.olahmenu
+package com.ti24a6.olahmenu
 
 import io.flutter.embedding.android.FlutterActivity
 

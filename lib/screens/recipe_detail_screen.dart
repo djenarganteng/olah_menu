@@ -437,12 +437,6 @@ class _AiRecipeDetailView extends StatelessWidget {
                     runSpacing: 8,
                     children: [
                       _AiDetailBadge(text: recipe.aiBadgeLabel),
-                      if (recipe.source == 'cache')
-                        _AiDetailBadge(
-                          text: recipe.sourceBadgeLabel,
-                          accentColor: Color(0xFFB97817),
-                          backgroundColor: Color(0xFFFFF4D7),
-                        ),
                     ],
                   ),
                   const SizedBox(height: 14),
@@ -683,27 +677,23 @@ class _AiRecipeDetailView extends StatelessWidget {
 class _AiDetailBadge extends StatelessWidget {
   const _AiDetailBadge({
     required this.text,
-    this.accentColor = AppColors.primary,
-    this.backgroundColor = const Color(0xFFFFF3D8),
   });
 
   final String text;
-  final Color accentColor;
-  final Color backgroundColor;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
-        color: backgroundColor,
+        color: const Color(0xFFFFF3D8),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: accentColor.withValues(alpha: 0.28)),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.28)),
       ),
       child: Text(
         text,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: accentColor,
+          color: AppColors.primary,
           fontWeight: FontWeight.w800,
         ),
       ),

@@ -116,6 +116,28 @@ class AuthProvider extends ChangeNotifier {
     await authService.updatePassword(newPassword);
   }
 
+  Future<void> deleteAccount({required String currentPassword}) async {
+    final currentUser = _user;
+    final email = currentUser?.email;
+    if (currentUser == null || email == null || email.isEmpty) {
+      throw StateError('Sesi login tidak ditemukan. Silakan masuk kembali.');
+    }
+
+    await authService.reauthenticate(email: email, password: currentPassword);
+    await authService.deleteAccount();
+
+    try {
+      await authService.signOut();
+    } catch (_) {
+      // Best effort. The server-side delete may already invalidate the session.
+    }
+
+    _isPasswordRecovery = false;
+    _user = null;
+    _status = AuthStatus.unauthenticated;
+    notifyListeners();
+  }
+
   void _restoreSession() {
     _user = authService.getCurrentUser();
     _status = _user == null

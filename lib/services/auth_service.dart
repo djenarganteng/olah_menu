@@ -19,6 +19,7 @@ class AuthService {
     final response = await _supabase.auth.signUp(
       email: email,
       password: password,
+      emailRedirectTo: 'olahmenu://auth-callback',
       data: {'full_name': fullName},
     );
 
@@ -73,6 +74,31 @@ class AuthService {
     await _supabase.auth.signInWithPassword(email: email, password: password);
   }
 
+  Future<void> deleteAccount() async {
+    final accessToken = _supabase.auth.currentSession?.accessToken;
+    try {
+      final response = await _supabase.functions.invoke(
+        'delete-account',
+        headers: accessToken == null
+            ? null
+            : {'Authorization': 'Bearer $accessToken'},
+      );
+
+      final data = response.data;
+      if (data is Map<String, dynamic>) {
+        final error = data['error']?.toString();
+        if (error != null && error.isNotEmpty) {
+          final details = data['details']?.toString();
+          throw StateError(
+            details == null || details.isEmpty ? error : '$error: $details',
+          );
+        }
+      }
+    } catch (error) {
+      throw StateError(_formatFunctionError(error));
+    }
+  }
+
   Future<String> updateAvatar({
     required String userId,
     required Uint8List bytes,
@@ -115,5 +141,19 @@ class AuthService {
       'id': userId,
       'full_name': fullName,
     });
+  }
+
+  String _formatFunctionError(Object error) {
+    final message = error.toString();
+    if (message.contains('FunctionException')) {
+      final detailsMatch = RegExp(
+        r'details:\s*(.*?),\s*reasonPhrase:',
+      ).firstMatch(message);
+      final details = detailsMatch?.group(1)?.trim();
+      if (details != null && details.isNotEmpty && details != 'null') {
+        return details;
+      }
+    }
+    return message;
   }
 }

@@ -66,23 +66,6 @@ class AiRecipeVisual extends StatelessWidget {
                 ),
               ),
             ),
-            Positioned(
-              left: 14,
-              top: 14,
-              child: _Badge(
-                icon: Icons.smart_toy_rounded,
-                text: recipe.aiBadgeLabel,
-              ),
-            ),
-            if (recipe.source == 'cache')
-              Positioned(
-                right: showFavoriteAction ? 58 : 14,
-                top: 14,
-                child: _Badge(
-                  icon: Icons.cached_rounded,
-                  text: recipe.sourceBadgeLabel,
-                ),
-              ),
             if (showFavoriteAction)
               Positioned(
                 right: 12,
@@ -213,45 +196,6 @@ class AiRecipeVisual extends StatelessWidget {
     }
 
     return visual;
-  }
-}
-
-class _Badge extends StatelessWidget {
-  const _Badge({required this.text, required this.icon});
-
-  final String text;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(999),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x16000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: AppColors.primary),
-          const SizedBox(width: 6),
-          Text(
-            text,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.primaryDark,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 

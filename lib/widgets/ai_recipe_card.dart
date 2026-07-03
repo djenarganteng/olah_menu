@@ -94,12 +94,6 @@ class _AiBody extends StatelessWidget {
               icon: Icons.smart_toy_rounded,
               label: recipe.aiBadgeLabel,
             ),
-            if (recipe.source == 'cache')
-              _Badge(
-                icon: Icons.cached_rounded,
-                label: recipe.sourceBadgeLabel,
-                subtle: true,
-              ),
           ],
         ),
         const SizedBox(height: 12),
@@ -203,23 +197,19 @@ class _Badge extends StatelessWidget {
   const _Badge({
     required this.icon,
     required this.label,
-    this.subtle = false,
   });
 
   final IconData icon;
   final String label;
-  final bool subtle;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
       decoration: BoxDecoration(
-        color: subtle ? AppColors.backgroundSoft : AppColors.primarySoft,
+        color: AppColors.primarySoft,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: subtle ? AppColors.border : AppColors.primary.withValues(alpha: 0.2),
-        ),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -227,13 +217,13 @@ class _Badge extends StatelessWidget {
           Icon(
             icon,
             size: 14,
-            color: subtle ? AppColors.primaryDark : AppColors.primary,
+            color: AppColors.primary,
           ),
           const SizedBox(width: 6),
           Text(
             label,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: subtle ? AppColors.text : AppColors.primaryDark,
+              color: AppColors.primaryDark,
               fontWeight: FontWeight.w800,
             ),
           ),
